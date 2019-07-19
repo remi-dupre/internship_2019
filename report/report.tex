@@ -1,0 +1,169 @@
+\documentclass[12px]{article}
+
+\usepackage{babel}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\usepackage{hyperref}
+
+
+\title{%
+  Internship Report --- M2 MPRI \\
+  Constant delay enumeration for documents spanners
+}
+\author{Rémi Dupré}
+
+
+\begin{document}
+  \maketitle
+
+  \input{summary.tex}
+  \pagebreak
+
+  \section{Background}
+
+    \subsection{Introduction}
+
+      The problem of finding a substring from a text belonging to a given
+      regular language has been widely studied, Thompson introduced an automata
+      based approach in 1968~\cite{thompson1968programming} which is now known
+      as one of the fastest implementation for regular
+      expressions~\cite{cox2007regular}.
+
+      Although, as classical approaches simulate runs over a regular automaton
+      while reading the input document linearly, they can't output two
+      substrings that overlap each over.
+
+      Take the examples of the regexp \texttt{AUG.\{0,5\}UAA}, matching any
+      substring in the form $uvw \in \Sigma^*$ where $u = \text{AUG}$, $|v|
+      \leq 5$ and $w = \text{UAA}$. It has 3 matches over the document $d =
+      \texttt{AUGAUGTUAAUAA}$:
+      \begin{itemize}
+        \item $d_0 \ldots d_8 = \texttt{AUGAUGTUAA}$
+        \item $d_3 \ldots d_8 = \texttt{AUGTUAA}$
+        \item $d_3 \ldots d_{11} = \texttt{AUGTUAAUAA}$
+      \end{itemize}
+
+      By allowing overlapping matches, it also mean that the output could be of
+      a quadratic size in the size of the input document. This is a big issue
+      since the input document of a sting matching problem is typically big,
+      which is why we usually aim at avoiding has many complexity factors to
+      the size of the document: classical regexp matching approaches are linear
+      in the size of the document, and usually avoid a factor in the size of
+      the input expression by determinizing the regular automaton, even though
+      it may lead to an exponential blowup.
+
+      Thus, with a naive complexity metric, there would be no hope for a worst
+      case complexity better than $O(|d|^2)$, however enumeration techniques
+      allow to build a data-structure in time linear in the size of the input
+      document which can be used to output all matches with a delay constant in
+      the size of the document, which mean that it only costs a pre-computation
+      in $O(|d|)$ and then $O(k)$ to retrieve the first $k$ elements of the
+      output~\cite{ICDT19}.
+
+    \subsection{Definitions}
+
+      \subsubsection*{Document spanner}
+
+        Let $\Sigma$ be a finite alphabet. A document $d = d_0 \dots d_{n−1}$
+        is a word over $\Sigma$. A \textit{span} of $d$ is a pair $[i,
+        j\rangle$ with $0 \leq i \leq j \leq |d|$ which represents a substring
+        of $d$ starting at position $i$ and ending at position $j - 1$.
+
+        Given a finite set $\mathcal{V}$ of variables, a result is defined as a
+        \textit{mapping} from these variables to spans of the input document.
+        Note that some variable may remain unassigned: formally, a mapping of
+        $\mathcal{V}$ on $d$ is a function $\mu$ from some domain
+        $\mathcal{V}_0 \subset \mathcal{V}$ to spans of $d$.
+
+        We define a \textit{document spanner} to be a function assigning to
+        every input document d a set of mappings, which denotes the set of
+        results of the extraction task on the document d.
+
+      \subsubsection*{Sequential Variable Set Automata}
+
+        Document spanners will here be represented using \textit{variable-set}
+        automata (VAs). The transition of a VA can either hold a letter of
+        $\Sigma$ or a \textit{variable marker} $x \vdash$ (denoting the
+        start of a span assigning to $x$), or $\dashv x$ (denoting the end of
+        a span assigning to $x$), where $x \in \mathcal{V}$.
+
+        Similarly to a classical automaton, a VA is defined as a tuple $A = (Q,
+        q_0, F, \delta)$ where $\delta$ defines a set of \textit{transitions}
+        of the form $(q, \sigma, q')$ where $\sigma \in \Sigma$ for
+        \textit{letter transitions} or $\sigma \in \mathcal{V}$ for
+        \textit{variable transitions}.
+
+        A run $\sigma$ of $A$ over $d$ is defined as a sequence of
+        configurations
+          \[ (q_0, i_0) \xrightarrow{\sigma_1} (q_1, i_1)
+          \xrightarrow{\sigma_2} \ldots \xrightarrow{\sigma_m} (q_m, i_m) \]
+        where $i_0 = 0$, $i_m = |d|$ and for every $1 \leq j \leq m$:
+        \begin{itemize}
+          \item Either $\sigma_j$ is a letter of $\Sigma$, we have $i_j =
+            i_{j-1} + 1$, $d_{i_{j-1}} = \sigma_j$ and $(q_{j-1}, \sigma_j,
+            q_j)$ is a letter transition of $A$;
+          \item Or $\sigma_j$ is a variable marker, we have $i_j = i_{j-1}$,
+            and $(q_{j-1}, \sigma_j, q_j)$ is a variable transition of $A$. In
+            this case we say that the variable marker $\sigma_j$ is read at
+            position $i_j$.
+        \end{itemize}
+
+
+        A run is \textit{valid} if it is accepting ($q_m \in F$), every
+        variable marker is read at most once, and whenever an open marker $x
+        \vdash$ is read at a position $i$ then the corresponding close marker
+        $\dashv x$ is read at a position $i'$ with $i \leq i'$ .
+
+        The algorithm will only take as input automata that can't be accepting
+        but not valid. Such an automaton is called \textit{sequential}. Note
+        that it is NP-complete to decide if a VA has a valid run over a
+        document~\cite{freydenberger:LIPIcs:2017}. Also note that the problem
+        of deciding if an automaton is sequential is in NL and that an
+        automaton can be transformed into a sequential automaton with an
+        exponential blowup.
+
+        From each valid run a mapping is defined where each variable $x \in V$
+        is mapped to the span $[i, i'\rangle$ such that $x \dashv$ is read at
+        position $i$ and $\vdash x$ is read at position $i'$ ; if these markers
+        are not read then $x$ is not assigned by the mapping (i.e., it is not
+        in the domain $\mathcal{V}_0$). The document spanner of the VA $A$ is
+        then the function that assigns to every document $d$ the set of
+        mappings defined by the valid runs of $A$ on $d$: note that the same
+        mapping can be defined by multiple different runs.
+
+        The task of the enumeration algorithm defined in~\cite{ICDT19} is the
+        following: given a VA $A$ and a document $d$, enumerate without
+        duplicates the mappings that are assigned to $d$ by the document
+        spanner of $A$.
+
+    \subsection{Example(s)}
+
+    \subsection{Overview of existing tools}
+
+
+  \section{Outlines of the enumeration algorithm}
+
+
+  \section{Implementation}
+
+    % Some implementation details, out of a subsection
+
+    \subsection{Limitations}
+
+    \subsection{Cleaning unreachable states}
+
+
+  \section{Performances of the algorithm}
+
+    \subsection{Limitation of existing tools}
+
+    \subsection{Results}
+
+
+  \pagebreak
+  \bibliography{bibliography}
+  \bibliographystyle{ieeetr}
+
+\end{document}

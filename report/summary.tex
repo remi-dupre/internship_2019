@@ -1,0 +1,58 @@
+\subsection*{The general context}
+
+  % What is it about ?
+  % Where does it come from ?
+  % What is the state of the art in this area ?
+
+  % NOTE: citations concernant les méthodes classiques ?
+  The problem of membership for regular languages is a well understood problem,
+  automata-based techniques. However, few efforts have been made to enumerate
+  all matches of a regexp over a text, most tools used to match regexps only
+  seek for one output, some like grep are intended to find any line containing
+  a match, it sometime appends that an option is available to list all
+  non-overlapping matches.
+
+  Enumeration techniques are widely used in database theory, in order to deal
+  with large datasets, it seems relevant to try applying theses techniques for
+  the problem of enumerating matches over a text, which could result on a
+  quadratic output for large input documents.
+
+\subsection*{The research problem}
+
+  % What is the question that you studied ?
+  % Why is it important, what are the applications/consequences ?
+  % Is it a new problem ?
+  % If so, why are you the first researcher in the universe who consider it ?
+  % If not, why did you think that you could bring an original contribution ?
+
+  My internship focuses on an algorithm proposed by Antoine Amarilli, Pierre
+  Bourhis, Stefan Mengel and Matthias Niewerth~\cite{ICDT19}, it allows to
+  enumerate all matches of a regexp with a constant delay, and a preprocessing
+  linear in the size of the automata (complexity factors dependant of the
+  size of the regular expression being considered as constants).
+
+  No implementation was provided for this algorithm yet, and it seemed that
+  some new issues would appear while trying to implement the algorithm, for
+  example the memory cost of a naive implementation of the algorithm would
+  quickly exceed the typical memory available on a personal computer.
+
+\subsection*{Your contribution}
+
+  % What is your solution to the question described in the last paragraph ?
+  % Be careful, do \emph{not} give technical details, only rough ideas !
+  % Pay a special attention to the description  of the \emph{scientific}
+  % approach.
+
+\subsection*{Arguments supporting its validity}
+
+  % What is the evidence that your solution is a good solution ?  Experiments ?
+  % Proofs ?
+  % Comment the robustness of your solution: how does it rely/depend on the
+  % working assumptions ?
+
+\subsection*{Summary and future work}
+
+  % What is next ? In which respect is your approach general ?
+  % What did your contribution bring to the area ?
+  % What should be done now ?
+  % What is the good \emph{next} question ?
