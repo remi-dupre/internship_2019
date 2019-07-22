@@ -44,6 +44,7 @@ class ExecMatcher(Matcher):
             + self.parameters
             + [regex, text_path],
             stdout=subprocess.PIPE,
+            # stderr=file_null,
             universal_newlines=True,
         )
 
@@ -81,3 +82,15 @@ class DagRs(ExecMatcher):
 
         elapsed = time.time() - self.timer
         return Match(self.count, data['span'], elapsed)
+
+
+class Grep(ExecMatcher):
+    name = 'grep'
+    binary = '/bin/grep'
+    parameters = ['--extended-regexp', '--only-matching', '--byte-offset']
+
+    def parse_line(self, line):
+        start, matched = line.strip().split(':')
+        start = int(start)
+        elapsed = time.time() - self.timer
+        return Match(self.count, (start, start + len(matched)), elapsed)
