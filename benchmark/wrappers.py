@@ -53,12 +53,15 @@ class ExecMatcher(Matcher):
     def parse_output(self, proc) -> list:
         ret = []
 
-        for line in proc.stdout:
-            self.count = len(ret)
-            match = self.parse_line(line)
+        try:
+            for line in proc.stdout:
+                self.count = len(ret)
+                match = self.parse_line(line)
 
-            if match is not None:
-                ret.append(match)
+                if match is not None:
+                    ret.append(match)
+        except KeyboardInterrupt:
+            pass
 
         return ret
 
@@ -84,10 +87,32 @@ class DagRs(ExecMatcher):
         return Match(self.count, data['span'], elapsed)
 
 
+class NaiveCubicRs(DagRs):
+    name = 'naive_cubic_rs'
+    parameters = ['--compare', '--naive-cubic']
+
+
+class NaiveQuadraticRs(DagRs):
+    name = 'naive_quadratic_rs'
+    parameters = ['--compare', '--naive-quadratic']
+
+
 class Grep(ExecMatcher):
     name = 'grep'
     binary = '/bin/grep'
     parameters = ['--extended-regexp', '--only-matching', '--byte-offset']
+
+    def parse_line(self, line):
+        start, matched = line.strip().split(':')
+        start = int(start)
+        elapsed = time.time() - self.timer
+        return Match(self.count, (start, start + len(matched)), elapsed)
+
+
+class RipGrep(ExecMatcher):
+    name = 'ripgrep'
+    binary = '/usr/bin/rg'
+    parameters = ['--only-matching', '--byte-offset']
 
     def parse_line(self, line):
         start, matched = line.strip().split(':')

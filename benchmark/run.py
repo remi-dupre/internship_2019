@@ -59,7 +59,7 @@ if args.run_tests:
 
     with gzip.open('results.json.gz', 'wb') as output:
         serialized = jsonpickle.encode(data)
-        serialized = json.dumps(json.loads(serialized), indent=4)
+        #  serialized = json.dumps(json.loads(serialized), indent=4)
         output.write(serialized.encode('utf8'))
 
 

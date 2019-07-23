@@ -15,11 +15,61 @@ graphs = [
                     'and test.runner.name == "dag_rs"'
                     'and test.text[-7:] == "dna_1e7"'
                 ),
+            }
+        },
+    },
+    {
+        'name': 'enum_speed_with_naives',
+        'plt_params': {
+            'title': ['enumeration speed (10kB input)'],
+            'xlabel': ['time (s)'],
+            'xscale': ['log'],
+            'ylabel': ['number of matches outputed yet'],
+            'yscale': ['log'],
+            'legend': [],
+        },
+        'x_axis': 'time',
+        'y_axis': {
+            'naive O(n²)': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e5"'
+                    'and test.runner.name == "naive_quadratic_rs"'
+                ),
             },
-            #  'impossible': {
-            #      'key': 'count',
-            #      'filter': 'test == "basic_dna" and expr == "Z"',
-            #  },
+            'naive O(n³)': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e6"'
+                    'and test.runner.name == "naive_cubic_rs"'
+                ),
+            },
+            'grep': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e5"'
+                    'and test.runner.name == "grep"'
+                ),
+            },
+            'ripgrep': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e5"'
+                    'and test.runner.name == "ripgrep"'
+                ),
+            },
+            'dag_rs': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e5"'
+                    'and test.runner.name == "dag_rs"'
+                ),
+            },
         },
     },
     {
