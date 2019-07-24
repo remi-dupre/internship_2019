@@ -44,8 +44,22 @@ if args.run_tests:
     nb_tests = sum(1 for _ in tests_iter())
 
     for i, test in enumerate(tests_iter()):
-        print('({}/{}) {}'.format(i + 1, nb_tests, test.name))
-        matches = test.runner.run(regexps[test.expr], test.text)
+        print(
+            '({}/{}) {}: running regex `{}` over text `{}` using algorithm `{}`'.format(
+                i + 1,
+                nb_tests,
+                test.name,
+                test.expr,
+                test.text,
+                test.runner.name,
+            )
+        )
+        regex = (
+            regexps[test.expr]['simple']
+            if test.runner.handle_repeats
+            else regexps[test.expr]['expanded']
+        )
+        matches = test.runner.run(regex, test.text)
 
         for match in matches:
             data.append(
@@ -93,12 +107,22 @@ if args.gen_graphs:
                     values[x_value].update(pt)
 
         for y_axis, y_params in graph['y_axis'].items():
+            # Extract datas
             x_values = sorted(values.keys())
             y_values = [
                 values[x][y_axis] if y_axis in values[x] else None
                 for x in x_values
             ]
 
+            # Filter out x-coordinates not corresponding to a y value
+            x_values = [
+                x_values[i]
+                for i in range(len(x_values))
+                if y_values[i] is not None
+            ]
+            y_values = [x for x in y_values if x is not None]
+
+            # Plot current curve
             plt.plot(x_values, y_values, label=y_axis)
 
         for fnc, params in graph['plt_params'].items():

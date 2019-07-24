@@ -1,3 +1,10 @@
+#    ____             __ _
+#   / ___|___  _ __  / _(_) __ _
+#  | |   / _ \| '_ \| |_| |/ _` |
+#  | |__| (_) | | | |  _| | (_| |
+#   \____\___/|_| |_|_| |_|\__, |
+#                          |___/
+
 graphs = [
     {
         'name': 'enum_speed',
@@ -19,7 +26,7 @@ graphs = [
         },
     },
     {
-        'name': 'enum_speed_with_naives',
+        'name': 'enum_speed_with_naives_10k',
         'plt_params': {
             'title': ['enumeration speed (10kB input)'],
             'xlabel': ['time (s)'],
@@ -42,7 +49,7 @@ graphs = [
                 'key': 'count',
                 'filter': (
                     'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e6"'
+                    'and test.text[-3:] == "1e5"'
                     'and test.runner.name == "naive_cubic_rs"'
                 ),
             },
@@ -68,6 +75,76 @@ graphs = [
                     'test.name == "compare_naive"'
                     'and test.text[-3:] == "1e5"'
                     'and test.runner.name == "dag_rs"'
+                ),
+            },
+            'SpannerConst': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e5"'
+                    'and test.runner.name == "spanner_const"'
+                ),
+            },
+        },
+    },
+    {
+        'name': 'enum_speed_with_naives_100k',
+        'plt_params': {
+            'title': ['enumeration speed (100kB input)'],
+            'xlabel': ['time (s)'],
+            'xscale': ['log'],
+            'ylabel': ['number of matches outputed yet'],
+            'yscale': ['log'],
+            'legend': [],
+        },
+        'x_axis': 'time',
+        'y_axis': {
+            'naive O(n²)': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e6"'
+                    'and test.runner.name == "naive_quadratic_rs"'
+                ),
+            },
+            'naive O(n³)': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e6"'
+                    'and test.runner.name == "naive_cubic_rs"'
+                ),
+            },
+            'grep': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e6"'
+                    'and test.runner.name == "grep"'
+                ),
+            },
+            'ripgrep': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e6"'
+                    'and test.runner.name == "ripgrep"'
+                ),
+            },
+            'dag_rs': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e6"'
+                    'and test.runner.name == "dag_rs"'
+                ),
+            },
+            'SpannerConst': {
+                'key': 'count',
+                'filter': (
+                    'test.name == "compare_naive"'
+                    'and test.text[-3:] == "1e6"'
+                    'and test.runner.name == "spanner_const"'
                 ),
             },
         },
@@ -124,6 +201,13 @@ graphs = [
 
 
 default_fields = {'plt_params': {}}
+
+#   _     _     _   _
+#  | |   (_)___| |_(_)_ __   __ _
+#  | |   | / __| __| | '_ \ / _` |
+#  | |___| \__ \ |_| | | | | (_| |
+#  |_____|_|___/\__|_|_| |_|\__, |
+#                           |___/
 
 
 def graphs_iter():

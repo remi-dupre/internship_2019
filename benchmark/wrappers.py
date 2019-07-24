@@ -2,6 +2,9 @@
 import json
 import os
 import subprocess
+import random
+import string
+import sys
 import time
 from dataclasses import dataclass
 
@@ -15,6 +18,7 @@ class Match:
 
 class Matcher:
     name = None
+    handle_repeats = True  # wether the tool supports (...){start, stop} syntax
 
     def __init__(self):
         self.timer = None
@@ -23,8 +27,7 @@ class Matcher:
         """
         Get a list of matches of the regexp over the input text.
         """
-        self.timer = time.time()
-        return []
+        return NotImplemented
 
 
 class ExecMatcher(Matcher):
@@ -36,7 +39,7 @@ class ExecMatcher(Matcher):
         self.count = 0
 
     def run(self, regex: str, text_path: str):
-        super().run(regex, text_path)
+        self.timer = time.time()
         file_null = open(os.devnull, 'w')
 
         process = subprocess.Popen(
@@ -44,7 +47,7 @@ class ExecMatcher(Matcher):
             + self.parameters
             + [regex, text_path],
             stdout=subprocess.PIPE,
-            # stderr=file_null,
+            stderr=file_null,
             universal_newlines=True,
         )
 
@@ -55,18 +58,55 @@ class ExecMatcher(Matcher):
 
         try:
             for line in proc.stdout:
-                self.count = len(ret)
                 match = self.parse_line(line)
 
                 if match is not None:
                     ret.append(match)
+                    self.count = len(ret)
         except KeyboardInterrupt:
-            pass
+            ok_messages = ['', 'y', 'Y', 'yes']
+            if (
+                input('Test skipped... Continue running? [y]: ')
+                not in ok_messages
+            ):
+                raise KeyboardInterrupt
 
         return ret
 
     def parse_line(self, line: str) -> Match:
         return NotImplemented
+
+
+class SpannerConst(ExecMatcher):
+    name = 'spanner_const'
+    binary = '/home/remi/stage/SpannersConst/cpp/bin/test'
+    handle_repeats = False
+
+    def run(self, regex, text_path):
+        self.timer = time.time()
+        rgx_path = '/tmp/benchmark.{}.rgx'.format(
+            ''.join(random.choice(string.ascii_lowercase) for _ in range(8))
+        )
+
+        with open(rgx_path, 'w') as f:
+            f.write(r'.*!x{{{}}}.*'.format(regex))
+
+        process = subprocess.Popen(
+            [os.path.expanduser(self.binary)] + [text_path, rgx_path],
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+        )
+
+        return self.parse_output(process)
+
+    def parse_line(self, line: str) -> Match:
+        # Outputs are in the form (x,;loffset)(,x;roffset)
+        left, right = map(
+            lambda x: int(x.split(';')[1]), line.rstrip()[1:-1].split(')(')
+        )
+
+        elapsed = time.time() - self.timer
+        return Match(self.count, [left, right], elapsed)
 
 
 class DagRs(ExecMatcher):
@@ -101,6 +141,7 @@ class Grep(ExecMatcher):
     name = 'grep'
     binary = '/bin/grep'
     parameters = ['--extended-regexp', '--only-matching', '--byte-offset']
+    handle_repeats = False
 
     def parse_line(self, line):
         start, matched = line.strip().split(':')
