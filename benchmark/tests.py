@@ -55,6 +55,14 @@ regexps = {
             + r'(TAG|TAA|TGA)'
         ),
     },
+    'dna_codon_2_no_bound': {
+        formatting: r'ATG([^T]..|T([^AG].|[^A][^A]|.[^AG]))*(TAG|TAA|TGA)'
+        for formatting in ('simple', 'expanded')
+    },
+    'dna_aligned_mirror': {
+        'simple': r'ACTG(.{1000})*ACTG',
+        'expanded': r'ACTG' + repeat('.', 1000, 1000) + r'ACTG',
+    },
 }
 
 tests = [
@@ -77,7 +85,7 @@ tests = [
         'text': [
             '/home/remi/stage/datasets/dna_1e' + str(i) for i in range(4, 7)
         ],
-        'expr': ['dna_codon_2'],
+        'expr': ['dna_codon_2', 'dna_codon_2_no_bound', 'dna_aligned_mirror'],
         'runners': [
             SpannerConst,
             DagRs,

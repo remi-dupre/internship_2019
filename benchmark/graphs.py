@@ -27,6 +27,11 @@ graphs = [
     },
     {
         'name': 'enum_speed_with_naives_10k',
+        'filter': '''(
+                  test.name == "compare_naive"
+                      and test.text[-3:] == "1e5"
+                      and test.expr == "dna_codon_2_no_bound"
+                  )''',
         'plt_params': {
             'title': ['enumeration speed (10kB input)'],
             'xlabel': ['time (s)'],
@@ -39,56 +44,34 @@ graphs = [
         'y_axis': {
             'naive O(n²)': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e5"'
-                    'and test.runner.name == "naive_quadratic_rs"'
-                ),
+                'filter': 'test.runner.name == "naive_quadratic_rs"',
             },
             'naive O(n³)': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e5"'
-                    'and test.runner.name == "naive_cubic_rs"'
-                ),
+                'filter': 'test.runner.name == "naive_cubic_rs"',
             },
-            'grep': {
-                'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e5"'
-                    'and test.runner.name == "grep"'
-                ),
-            },
+            'grep': {'key': 'count', 'filter': 'test.runner.name == "grep"'},
             'ripgrep': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e5"'
-                    'and test.runner.name == "ripgrep"'
-                ),
+                'filter': 'test.runner.name == "ripgrep"',
             },
             'dag_rs': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e5"'
-                    'and test.runner.name == "dag_rs"'
-                ),
+                'filter': 'test.runner.name == "dag_rs"',
             },
             'SpannerConst': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e5"'
-                    'and test.runner.name == "spanner_const"'
-                ),
+                'filter': 'test.runner.name == "spanner_const"',
             },
         },
     },
     {
         'name': 'enum_speed_with_naives_100k',
+        'filter': '''(
+                  test.name == "compare_naive"
+                      and test.text[-3:] == "1e6"
+                      and test.expr == "dna_codon_2_no_bound"
+                  )''',
         'plt_params': {
             'title': ['enumeration speed (100kB input)'],
             'xlabel': ['time (s)'],
@@ -101,56 +84,30 @@ graphs = [
         'y_axis': {
             'naive O(n²)': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e6"'
-                    'and test.runner.name == "naive_quadratic_rs"'
-                ),
+                'filter': 'test.runner.name == "naive_quadratic_rs"',
             },
             'naive O(n³)': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e6"'
-                    'and test.runner.name == "naive_cubic_rs"'
-                ),
+                'filter': ('test.runner.name == "naive_cubic_rs"'),
             },
-            'grep': {
-                'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e6"'
-                    'and test.runner.name == "grep"'
-                ),
-            },
+            'grep': {'key': 'count', 'filter': 'test.runner.name == "grep"'},
             'ripgrep': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e6"'
-                    'and test.runner.name == "ripgrep"'
-                ),
+                'filter': 'test.runner.name == "ripgrep"',
             },
             'dag_rs': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e6"'
-                    'and test.runner.name == "dag_rs"'
-                ),
+                'filter': 'test.runner.name == "dag_rs"',
             },
             'SpannerConst': {
                 'key': 'count',
-                'filter': (
-                    'test.name == "compare_naive"'
-                    'and test.text[-3:] == "1e6"'
-                    'and test.runner.name == "spanner_const"'
-                ),
+                'filter': 'test.runner.name == "spanner_const"',
             },
         },
     },
     {
         'name': 'prec_speed',
+        'filter': 'test.name == "incr_dna" and count == 1',
         'plt_params': {
             'title': ['precomputation speed'],
             'xscale': ['log'],
@@ -160,14 +117,7 @@ graphs = [
         },
         'x_axis': 'float(test.text[-3:])',
         'y_axis': {
-            'time': {
-                'key': 'time',
-                'filter': (
-                    'test.name == "incr_dna"'
-                    'and test.runner.name == "dag_rs"'
-                    'and count == 1'
-                ),
-            }
+            'time': {'key': 'time', 'filter': 'test.runner.name == "dag_rs"'}
         },
     },
     {
@@ -200,7 +150,7 @@ graphs = [
 ]
 
 
-default_fields = {'plt_params': {}}
+default_fields = {'filter': 'True', 'plt_params': {}}
 
 #   _     _     _   _
 #  | |   (_)___| |_(_)_ __   __ _

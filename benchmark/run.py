@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
+import math
 import os
 
 import argparse
 import gzip
-import json
 import jsonpickle
 import matplotlib.pyplot as plt
 
@@ -93,6 +93,9 @@ if args.gen_graphs:
 
         for point in data:
             pt = dict()
+
+            if not eval(graph['filter'], point):
+                continue
 
             for y_axis, params in graph['y_axis'].items():
                 if eval(params['filter'], point):
