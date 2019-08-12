@@ -3,9 +3,12 @@
 \usepackage{babel}
 \usepackage[T1]{fontenc}
 \usepackage[a4paper]{geometry}
+\usepackage{hyperref}
 \usepackage[utf8]{inputenc}
 \usepackage{mathtools}
-\usepackage{hyperref}
+\usepackage{pdfpages}
+\usepackage[textsize=small]{todonotes}
+\usepackage{xcolor}
 
 
 \title{%
@@ -21,48 +24,139 @@
   \input{summary.tex}
   \pagebreak
 
-  \section{Background}
 
-    \subsection{Introduction}
+  \section{Introduction}
 
-      The problem of finding a substring from a text belonging to a given
-      regular language has been widely studied, Thompson introduced an automata
-      based approach in 1968~\cite{thompson1968programming} which is now known
-      as one of the fastest implementation for regular
-      expressions~\cite{cox2007regular}.
+    The problem of finding a substring from a text belonging to a given
+    regular language has been widely studied. In particular Thompson
+    introduced an automata based approach in
+    1968~\cite{thompson1968programming} which is now known as one of the
+    fastest implementation for regular expressions~\cite{cox2007regular}.
 
-      Although, as classical approaches simulate runs over a regular automaton
-      while reading the input document linearly, they can't output two
-      substrings that overlap each over.
+    However, as classical approaches simulate runs over a regular automaton
+    while reading the input document linearly, they cannot output two
+    substrings that overlap each over. Take the examples of the regexp
+    \texttt{\textcolor{blue}{AUG}\textcolor{gray}{(.\{3\})\{0,2\}}\textcolor{red}{UAA}},
+    matching any substring in the form $uvw \in \Sigma^*$ where $u =
+    \text{\textcolor{blue}{AUG}}$, $|v| \in \{0, 3, 6\}$ and $w =
+    \text{\textcolor{red}{UAA}}$. It has 3 matches over the document $d =
+    \texttt{AUGAUGTGTUAAUAA}$:
+    \begin{itemize}
+      \item $d_0 \ldots d_8 =
+        \texttt{\textcolor{blue}{AUG}\textcolor{gray}{AUGTGT}\textcolor{red}{UAA}}$
+      \item $d_3 \ldots d_8 =
+        \texttt{\textcolor{blue}{AUG}\textcolor{gray}{TGT}\textcolor{red}{UAA}}$
+      \item $d_3 \ldots d_{11} =
+        \texttt{\textcolor{blue}{AUG}\textcolor{gray}{TGTUAA}\textcolor{red}{UAA}}$
+    \end{itemize}
 
-      Take the examples of the regexp \texttt{AUG.\{0,5\}UAA}, matching any
-      substring in the form $uvw \in \Sigma^*$ where $u = \text{AUG}$, $|v|
-      \leq 5$ and $w = \text{UAA}$. It has 3 matches over the document $d =
-      \texttt{AUGAUGTUAAUAA}$:
-      \begin{itemize}
-        \item $d_0 \ldots d_8 = \texttt{AUGAUGTUAA}$
-        \item $d_3 \ldots d_8 = \texttt{AUGTUAA}$
-        \item $d_3 \ldots d_{11} = \texttt{AUGTUAAUAA}$
-      \end{itemize}
+    By allowing overlapping matches, it also mean that the can could be of
+    a quadratic size in the size of the input document. Thus, a classical
+    worst case complexity analysis cannot hope to be faster than $O(|d|^2)$.
+    This worst case behaviour is fairly easy to reach using the regex
+    \texttt{.*} over any document $d$.
 
-      By allowing overlapping matches, it also mean that the output could be of
-      a quadratic size in the size of the input document. This is a big issue
-      since the input document of a sting matching problem is typically big,
-      which is why we usually aim at avoiding has many complexity factors to
-      the size of the document: classical regexp matching approaches are linear
-      in the size of the document, and usually avoid a factor in the size of
-      the input expression by determinizing the regular automaton, even though
-      it may lead to an exponential blowup.
+    Since the input of a pattern matching problem is typically big, this
+    quadratic factor is usually too expensive. Moreover, in many real world
+    cases, the output will actually be very small compared to the input.
 
-      Thus, with a naive complexity metric, there would be no hope for a worst
-      case complexity better than $O(|d|^2)$, however enumeration techniques
-      allow to build a data-structure in time linear in the size of the input
-      document which can be used to output all matches with a delay constant in
-      the size of the document, which mean that it only costs a pre-computation
-      in $O(|d|)$ and then $O(k)$ to retrieve the first $k$ elements of the
-      output~\cite{ICDT19}.
+    Thus it will be more relevant to use a different complexity measure for
+    this problem, which is expressive about the size of the output. Here, we
+    will use the complexity of enumeration, which integrates two measures:
 
-    \subsection{Definitions}
+    \begin{itemize}
+      \item an upper bound on the time spent in the \textit{preprocessing}
+        phase of the algorithm, this is the time spent computing before the
+        first result is outputted.
+      \item an upper bound on the \textit{delay} of the algorithm, this is
+        the maximum time elapsed between the output of two results of the
+        algorithm.
+    \end{itemize}
+
+    Amarilli~\&~al.~\cite{ICDT19} introduced an enumeration algorithm with a
+    preprocessing phase linear in the size of the input document, and a delay
+    independent of this size. My work was to adapt this algorithm for
+    implementation and compare it to other existing tools.
+
+
+  \section{Definitions}
+
+    \subsection{Regular expressions and regular languages}
+
+      \subsubsection{Regular expressions}
+
+        The language of regular expressions over an alphabet $\Sigma$ can
+        recursively be defined as the language containing:
+
+        \begin{itemize}
+          \item $``\emptyset"$ denoting the empty set of words of $\Sigma$
+          \item $``\epsilon"$ denoting the set containing only the empty string
+          \item $\forall a \in \Sigma, ``a"$ denoting the set
+            containing only the character a
+          \item for any regular expressions $E_1$ and $E_2$, $``E_1 E_2"$
+            denoting the set of concatenations of a word of $E_1$ with a word
+            of $E_2$.
+          \item for any regular expressions $E_1$ and $E_2$, $E_1|E_2$
+            denoting the union of words of $E_1$ and $E_2$.
+          \item for any regular expression $E$, $E^*$ denoting the set
+            containing $epsilon$ and any other concatenation of words of $E$.
+        \end{itemize}
+
+        The languages denoted by regular expressions are regular languages,
+        they are also the languages recognised by finite automata.
+
+        \paragraph{Notations} Some extra syntax can be introduced to make the
+        regular expressions more pleasant to use, some of it will be used to
+        make examples more readable in this report:
+        \begin{itemize}
+          \item $``."$ denotes the entire alphabet $\Sigma$
+          \item for any regular expression $E$ and $0 \leq n \leq m$,
+            $``E\{n,m\}"$ denotes the languages of words containing
+            concatenation of between $n$ and $m$ words of $E$. $``E\{n\}"$
+            denotes the set of words that are concatenation of exactly $n$
+            words of $E$.
+          \item closure has an higher precedence than concatenation which has
+            higher precedence than union: \texttt{hello|world!*} denotes the
+            set $\{hello, world, world!, world!!, world!!!, \ldots\}$
+        \end{itemize}
+
+      \subsubsection{Classical algorithms}
+
+        Given a deterministic finite automaton $\mathcal{A}$, naively running
+        the automaton a document $d$ takes time $O(|d|)$ and determines whether
+        $d$ is part of the language recognised by $\mathcal{A}$.
+
+        If $\mathcal{A}$ is not deterministic, it is still possible to perform
+        the same operation in time $O(|\mathcal{A}| |d|)$: it requires to
+        simulate all possible runs by keeping the set $Q_i$ of all possible
+        states of the execution of $A$ while reading $d_i$. If $\mathcal{A} =
+        (Q, I, \delta, F)$:
+        \begin{itemize}
+          \item $Q_0 = I$
+          \item $\forall 1 \leq i \leq |d|, Q_i = \{(q', d_i, q'') \in \delta,
+            q' \in Q_{i-1}\}$
+        \end{itemize}
+        Finally, there is a valid run of $\mathcal{A}$ over $d$ if $Q_{|d|}
+        \bigcap F \neq \emptyset$.
+
+        \vspace{0.5cm}
+
+        The next main issue is then to find an automata that recognises the
+        language of an input regular expression. Thompson algorithm introduces
+        operation to recursively apply the operations of union, concatenation
+        and closure to the automatons representing
+        subexpressions~\cite{thompson1968programming}. This process is linear
+        in the size of the expression but the resulting automata is not
+        minimal unless the $\epsilon$-transitions are removed, which can take a
+        time in $O(n^2)$.
+
+        Glushkov algorithm in the other hand can also compute a minimal
+        automata, by recursively computing the set of the first letters, last
+        letters and factor two of the words in the regular
+        language~\cite{glushkov1961abstract}\todo{check the source}. This
+        process takes time $O(n^2)$.
+
+    \subsection{Variable set automata}
 
       \subsubsection*{Document spanner}
 
@@ -110,7 +204,6 @@
             position $i_j$.
         \end{itemize}
 
-
         A run is \textit{valid} if it is accepting ($q_m \in F$), every
         variable marker is read at most once, and whenever an open marker $x
         \vdash$ is read at a position $i$ then the corresponding close marker
@@ -139,25 +232,63 @@
         spanner of $A$.
 
     \subsection{Example(s)}
+      \includepdf{figures/example_dag.pdf}
 
-    \subsection{Overview of existing tools}
+    \subsection{Related work}
+
+      % - Christiano & al
+      % - anything else ?
 
 
-  \section{Outlines of the enumeration algorithm}
+  \section{Outline of the enumeration algorithm}
 
 
   \section{Implementation}
 
     % Some implementation details, out of a subsection
 
+    \subsection{Technical details}
+
+      A first draft of the implementation of the algorithm was implemented
+      using Python 3, this programming language is known to be slow but its
+      flexibility allowed to get a working implementation after about a week of
+      work. The expression are parsed using a LALR parser for a custom grammar,
+      and are converted to an automata using the Glushkov algorithm.
+
+      I later built an implementation using Rust in order to be able to compare
+      performances of the algorithm with existing tools without suffering of
+      the overhead of Python. The regex crate of Rust allows to access the
+      AST of parsed regexps, but I still needed to compile the into automaton
+      using Glushkov algorithm in order to handle variables.
+
+      These tools work similarly to other pattern matching tools like grep and
+      use the same regex syntax. Variables are defined out of named groups, and
+      instead of outputting a single match with a single assignation to groups,
+      it outputs the list of all possible assignations of groups of the
+      expressions.
+
+      \todo{Introduire le naïf quelque-part par ici?}.
+
     \subsection{Limitations}
+
+      \todo[inline]{trucs pas time efficient (hashtables, matrices?)}
 
     \subsection{Cleaning unreachable states}
 
 
-  \section{Performances of the algorithm}
+  \section{Performance of the algorithm}
 
-    \subsection{Limitation of existing tools}
+    \subsection{Limitations of existing tools}
+
+      Excepted for the naive algorithms and the work of Florenzo &
+      al.~\todo{reference}, it is difficult to fairly compare to already
+      existing tools. Some of these tools allow to output a list of overlapping
+      matches, however this will at most output one match for each starting
+      position in the output document. Regex actually have a greedy semantic
+      for closures in the context of these tools, it will as a default match
+      the largest possible string for each closure and can be turned to a lazy
+      semantic where it only matches the smallest possible string. For
+      example,\todo{todo}.
 
     \subsection{Results}
 

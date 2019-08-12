@@ -5,17 +5,19 @@
   % What is the state of the art in this area ?
 
   % NOTE: citations concernant les méthodes classiques ?
-  The problem of membership for regular languages is a well understood problem,
-  automata-based techniques. However, few efforts have been made to enumerate
-  all matches of a regexp over a text, most tools used to match regexps only
-  seek for one output, some like grep are intended to find any line containing
-  a match, it sometime appends that an option is available to list all
-  non-overlapping matches.
+  The problem of membership for regular languages is a well-understood problem,
+  automata-based techniques. % NOTE: illisible
+  However, few efforts have been made to enumerate all matches of a regexp over
+  a text. Indeed most tools used to match regexps only produce one match, some
+  like grep are intended to find any line containing a match, it sometimes
+  append that an option is available to list all non-overlapping matches.
+  % "the tools intended to list all matches only list non-overlapping..."
 
   Enumeration techniques are widely used in database theory, in order to deal
-  with large datasets, it seems relevant to try applying theses techniques for
+  with large datasets, it seems relevant to try applying these techniques for
   the problem of enumerating matches over a text, which could result on a
   quadratic output for large input documents.
+  % dire y a bcp then dire c'est pour ca algo enumeration
 
 \subsection*{The research problem}
 
@@ -28,13 +30,15 @@
   My internship focuses on an algorithm proposed by Antoine Amarilli, Pierre
   Bourhis, Stefan Mengel and Matthias Niewerth~\cite{ICDT19}, it allows to
   enumerate all matches of a regexp with a constant delay, and a preprocessing
-  linear in the size of the automata (complexity factors dependant of the
+  linear in the size of the automata (complexity factors dependent of the
   size of the regular expression being considered as constants).
+  % need a def of constant
 
   No implementation was provided for this algorithm yet, and it seemed that
   some new issues would appear while trying to implement the algorithm, for
   example the memory cost of a naive implementation of the algorithm would
   quickly exceed the typical memory available on a personal computer.
+  % semms like no pb, "in particular investigating new questions [...]"
 
 \subsection*{Your contribution}
 
