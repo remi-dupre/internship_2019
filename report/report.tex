@@ -17,7 +17,7 @@
 
 % Function symbols
 \DeclareMathOperator{\Ref}{Ref}
-\newcommand{\Span}[1]{[#1\rangle}
+\newcommand{\Span}[1]{\left[ #1 \right\rangle}
 
 \title{%
   Internship Report --- M2 MPRI \\
@@ -124,17 +124,17 @@
         recursively be defined as the language containing:
 
         \begin{itemize}
-          \item $``\emptyset"$ denoting the empty set of words of $\Sigma^*$
-          \item $``\epsilon"$ denoting the set containing only the empty string
-          \item $\forall a \in \Sigma, ``a"$ denoting the set
-            containing only the character a
-          \item for any regular expressions $E_1$ and $E_2$, $``(E_1) (E_2)"$
-            %TODO paenthèses
+          \item ``$\emptyset$'' denoting the empty set of words of $\Sigma^*$
+          \item ``$\epsilon$'' denoting the set containing only the empty
+            string
+          \item $\forall a \in \Sigma$, ``$a$'' denoting the set containing
+            only the character a
+          \item for any regular expressions $E_1$ and $E_2$, ``$(E_1) (E_2)$''
             denoting the set of concatenations of a word of $E_1$ with a word
             of $E_2$.
-          \item for any regular expressions $E_1$ and $E_2$, $(E_1)|(E_2)$
+          \item for any regular expressions $E_1$ and $E_2$, ``$(E_1)|(E_2)$''
             denoting the union of words of $E_1$ and $E_2$.
-          \item for any regular expression $E$, $(E)^*$ denoting the set
+          \item for any regular expression $E$, ``${(E)}^*$'' denoting the set
             containing $\epsilon$ and any other concatenation of words of $E$.
         \end{itemize}
 
@@ -146,10 +146,10 @@
         regular expressions more pleasant to use, some of it will be used to
         make examples more readable in this report:
         \begin{itemize}
-          \item $``."$ denotes the entire alphabet $\Sigma$
+          \item ``.'' denotes the entire alphabet $\Sigma$
           \item for any regular expression $E$ and $0 \leq n \leq m$,
-            $``(E)\{n,m\}"$ denotes the languages of words containing
-            concatenation of between $n$ and $m$ words of $E$. $``(E)\{n\}"$
+            ``$(E)\{n,m\}$'' denotes the languages of words containing
+            concatenation of between $n$ and $m$ words of $E$. ``$(E)\{n\}$''
             denotes the set of words that are concatenation of exactly $n$
             words of $E$.
           \item parenthesis can be avoided with the following conventions:
@@ -187,25 +187,24 @@
         \vspace{0.5cm}
 
         The next main issue is then to find an automata that recognises the
-        language of an input regular expression. Thompson's algorithm introduces
-        operation to recursively apply the operations of union, concatenation
-        and closure to the automatons representing
+        language of an input regular expression. Thompson's algorithm
+        introduces operation to recursively apply the operations of union,
+        concatenation and closure to the automatons representing
         subexpressions~\cite{thompson1968programming}. This process is linear
-        in the size of the expression but the resulting automata is not
-        minimal unless the $\epsilon$-transitions are removed, which can take a
-        time in $O(n^2)$.
+        in the size of the expression but the resulting automata uses
+        $\epsilon$-transitions that can be removed in time $O(n^2)$.
 
-        Glushkov's algorithm in the other hand can also compute a minimal
-        automata, by recursively computing the set of the first letters, last
-        letters and factor two of the words in the regular
-        language~\cite{glushkov1961abstract}\todo{check the source}. This
-        process takes time $O(n^2)$.
+        Glushkov's algorithm in the other hand can also compute the same
+        automaton with no $\epsilon$-transitions, by recursively computing the
+        set of the first letters, last letters and factor two of the words in
+        the regular language~\cite{glushkov1961abstract}\todo{check the
+        source}. This process takes time $O(n^2)$.
 
       \subsubsection{Example}%
         \label{sec:example_simple}
 
         Let us consider the example of the regular expression $E =$
-        \texttt{.*[\textasciicircum\_]+@[\textasciicircum\_]+.*}} over the
+        \texttt{.*[\textasciicircum\_]+@[\textasciicircum\_]+.*} over the
         alphabet $\Sigma = \{a, b, \ldots, z, @, \texttt \_, \vdash, \dashv\}$.
         The central part (\texttt{[\textasciicircum\_]+@[\textasciicircum\_]+})
         of the expression matches an email-like pattern defined as a non-empty
@@ -224,11 +223,11 @@
         q_0}_\texttt{send} q_0 \underbrace{q_1q_1q_1q_1}_\texttt{hello} q_2
         \underbrace{q_2 q_2 q_2 q_2 q_3}_\texttt{world}$.
 
-        \begin{figure}[ht]
+        \begin{figure}[ht]%
             \label{fig:automata_simple}
             \centering
             \begin{tikzpicture}[automaton, auto]
-              \node[state,initial]   (1) [right=of 0] {$q_0$};
+              \node[state,initial]   (1)              {$q_0$};
               \node[state]           (3) [right=of 1] {$q_1$};
               \node[state]           (4) [right=of 3] {$q_2$};
               \node[state,accepting] (6) [right=of 4] {$q_3$};
@@ -244,7 +243,6 @@
             \end{tikzpicture}
             \caption{An automata recognising the same regular language as
             \texttt{.*[\textasciicircum\_]+@[\textasciicircum\_]+.*}}
-            \label{ex:intro-1}
           \end{figure}
 
     \subsection{Variable set automata}
@@ -299,7 +297,7 @@
         A run is \textit{valid} if it is accepting ($q_m \in F$), every
         variable marker is read at most once, and whenever an open marker $x
         \vdash$ is read at a position $i$ then the corresponding close marker
-        $\dashv x$ is read at a position $i'$ with $i \leq i'$ .
+        $\dashv x$ is read at a position $i'$ with $i \leq i'$.
 
         The algorithm will only take as input automata that can't be accepting
         but not valid. Such an automaton is called \textit{sequential}. Note
@@ -311,7 +309,7 @@
 
         From each valid run a mapping is defined where each variable $x \in V$
         is mapped to the span $\Span{i, i'}$ such that $x \dashv$ is read at
-        position $i$ and $\vdash x$ is read at position $i'$ ; if these markers
+        position $i$ and $\vdash x$ is read at position $i'$; if these markers
         are not read then $x$ is not assigned by the mapping (i.e., it is not
         in the domain $\mathcal{V}_0$). The document spanner of the VA $A$ is
         then the function that assigns to every document $d$ the set of
@@ -336,11 +334,10 @@
       $\Gamma_\mathcal{V}$ appears exactly once in $r$).
 
 
-      \textit{Regex formulas} over $\Sigma$ extends the syntax of regular
-      expressions defined in Section~\ref{sec:def:regex}. The set of regex
-      formulas is the smallest set containing regular expressions, closed by
-      the same rules as regular expressions and such that for any regex formula
-      $E$ and variable $x \in \mathcal{V}$, $x\{E\}$ is a regex formula.
+      The set of \textit{regex formulas} is the smallest set containing regular
+      expressions, closed by the same rules as regular expressions and such
+      that for any regex formula $E$ and variable $x \in \mathcal{V}$, $x\{E\}$
+      is a regex formula.
 
       A regex formula $E$ denotes words over the extended alphabet $\Sigma
       \cup \Gamma_\mathcal{V}$ like so:
@@ -367,15 +364,15 @@
       $x{\vdash}$ and $j$ letters of $\Sigma$ after ${\dashv}x$ in $r$.
 
       A functional regex formula $E$ defines a document spanner over words of
-      $\Sigma^*$: $\llbracket E \rrbracket (d)$ = \{\mu^r, r \in \Ref(E, d)\}$.
+      $\Sigma^*$: $\llbracket E \rrbracket (d) = \{\mu^r, r \in \Ref(E, d)\}$.
 
-      \todo[inline]{Maybe had some details. How to adapt Glushkov,
-      reference that functional is decidable...}
+      \todo[inline]{Maybe had some details. How to adapt Glushkov, reference
+      that functional is decidable...}
 
     \subsection{Example}
-      Let us modify the example of section~\ref{sec:example_simple} to extract
+      Let us modify the example of Section~\ref{sec:example_simple} to extract
       the position of an email-like pattern into a variable:
-      \texttt{.*x\{[\textasciicircum\_]+@[\textasciicircum\_]+\}.*}}.
+      \texttt{.*x\{[\textasciicircum\_]+@[\textasciicircum\_]+\}.*}.
 
       Figure~\ref{fig:automata} represents an automaton that induces the same
       document spanner as this regex.
@@ -388,7 +385,7 @@
       q_3 q_3 q_4 q_5 q_5 q_5 q_5 q_5}_\texttt{hello@world}
       \underbrace{q_6}_{{\dashv}x}$.
 
-      \begin{figure}[ht]
+      \begin{figure}[ht]%
         \label{fig:automata}
         \centering
         \begin{tikzpicture}[automaton, auto]
@@ -415,17 +412,20 @@
             (6) edge node {$\Sigma$} (7)
             (7) edge [loop above] node {$\Sigma$} ();
         \end{tikzpicture}
-        \caption{An automata recognising the same regular language as
-        \texttt{%
-          .*x\{[\textasciicircum\_]+@[\textasciicircum\_]+\}.*}}
+        \caption{%
+          An automata recognising the same regular language as
+          \texttt{.*x\{[\textasciicircum\_]+@[\textasciicircum\_]+\}.*}
+        }%
         \label{ex:intro-1}
       \end{figure}
 
 
-    \subsection{Related work}
+    \section{Related work}
 
-      % - Christiano & al
-      % - anything else ?
+      \todo[inline]{%
+        Florenzano \& al \\
+        Anything else?
+      }
 
 
   \section{Outline of the enumeration algorithm}
@@ -438,7 +438,7 @@
 
     \subsection{Technical details}
 
-      \todo{
+      \todo{%
         Parler de Glushkov et du parsing dans l'overview de l'algo, pas
         vraiment ici
       }
@@ -484,11 +484,11 @@
       semantic where it only matches the smallest possible string. For
       example over the text \texttt{abcde} by using gnu grep:
         \begin{itemize}
-          \item the regexp \texttt{...*} will output \texttt{"abcde"},
-            \texttt{"bcde"}, \texttt{"cde"}, \texttt{"de"}
+          \item the regexp \texttt{...*} will output \texttt{abcde},
+            \texttt{bcde}, \texttt{cde}, \texttt{de}
           \item the regexp \texttt{...*?} (where \texttt{*?} is the lazy
-            version of \texttt{*}) will output \texttt{"ab"}, \texttt{"bc"},
-            \texttt{"cd"} and \texttt{"de"}
+            version of \texttt{*}) will output \texttt{ab}, \texttt{bc},
+            \texttt{cd} and \texttt{de}
         \end{itemize}
       However, the output to the enumeration problem should contain all
       substrings of size at least 2, thus these two kinds of greedy semantics
