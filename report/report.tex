@@ -44,6 +44,8 @@
 
   \input{summary.tex}
   \pagebreak
+  \tableofcontents
+  \pagebreak
 
   \section{Introduction}
 
@@ -60,14 +62,14 @@
     matching any substring in the form $uvw \in \Sigma^*$ where $u =
     \texttt{\textcolor{blue}{AUG}}$, $|v| \in \{0, 3, 6\}$ and $w =
     \texttt{\textcolor{red}{UAA}}$. It has 3 matches over the document $d =
-    \texttt{AUGAUGTGTUAAUAA}$:
+    \texttt{AUGAUGCGCUAAUAA}$:
       \begin{itemize}
         \item $d_0 \ldots d_8 =
-          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{AUGTGT}\textcolor{red}{UAA}}$
+          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{AUGCGC}\textcolor{red}{UAA}}$
         \item $d_3 \ldots d_8 =
-          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{TGT}\textcolor{red}{UAA}}$
+          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{CGC}\textcolor{red}{UAA}}$
         \item $d_3 \ldots d_{11} =
-          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{TGTUAA}\textcolor{red}{UAA}}$
+          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{CGCUAA}\textcolor{red}{UAA}}$
       \end{itemize}
 
     By allowing overlapping matches, it also mean that the output can could be
@@ -109,55 +111,59 @@
         A finite automaton $\mathcal{A}$ over a finite alphabet $\Sigma$ is a
         tuple $(Q, I, \Delta, F)$ where:
           \begin{itemize}
-            \item $Q$ is the set of states
-            \item $I \subseteq Q$ is the finite set of initial states
+            \item $Q$ is the finite set of states
+            \item $I \subseteq Q$ is the set of initial states
             \item $F \subseteq Q$ is the set of final states
             \item $\Delta \subseteq Q \times \Sigma \times Q$ is the transition
               function
           \end{itemize}
 
-          A \textit{run} $\rho$ over an input word $w= w_1 w_2 \ldots w_n \in
-          \Sigma^*$ is a sequence of transitions $(q_0, w_1, q_1)$, $(q_1, w_2,
-          q_2), \ldots, (q_{n-1}, w_n, q_n) \in \Delta^*$ where $q_0 \in I$. It
-          is \textit{accepting} if $q_n \in F$.
+          A \textit{run} $\rho$ of $\mathcal{A}$ over an input word $w= w_1 w_2
+          \ldots w_n \in \Sigma^*$ is a sequence of transitions $(q_0, w_1,
+          q_1)$, $(q_1, w_2, q_2), \ldots, (q_{n-1}, w_n, q_n) \in \Delta^*$
+          where $q_0 \in I$. It is \textit{accepting} if $q_n \in F$.
 
           If an accepting run exists over an input word $w$, then $w$ is
           \textit{accepted}. The language $L(\mathcal{A})$ recognized by the
-          automaton is the set of accepted words. Languages recognized by an
-          automaton are called \textit{regular}.
+          automaton is the set of words accepted by the automaton. Languages
+          recognized by an automaton are called \textit{regular}.
 
-          An automaton is called \textit{deterministic} if $|I| = 1$ and for any
-          pair of state $q \in Q$ and letter $a \in \Sigma$ there is at most one
-          transition $(q, a, q')$ in $\Delta$.
+          An automaton is called \textit{deterministic} if $|I| = 1$ and for
+          any pair of state $q \in Q$ and letter $a \in \Sigma$ there is at
+          most one transition $(q, a, q')$ in $\Delta$.
         \end{definition}
 
         Figure~\ref{fig:automata_simple} shows a standard visual representation
         for the example of an automaton $\mathcal{A} = (\{q_0, q_1, q_2, q_3\},
         \{q_0\}, \{(q_0, a, q_0), a \in \Sigma\} \cup \cdots \cup \{(q_1,
-        \texttt{@}, q_2)\},\{q_3\})$.
+        \texttt{@}, q_2)\},\{q_3\})$. In this representation given $q \in Q$
+        and $q' \in Q$ a set of transitions $(q, a, q')$ for all $a \in A
+        \subseteq \Sigma$ will be merged in a transition denoted by the set
+        $A$: $(q, A, q')$.
 
       \subsubsection{Regular expressions}%
         \label{sec:def:regex}
 
         \begin{definition}
-          The language of \textit{regular expressions} over an alphabet
+          We define \emph{regular expressions} inductively as the expressions
+          that allows:
           $\Sigma$ can recursively be defined as the language containing:
             \begin{itemize}
-              \item ``$\emptyset$'' denoting the empty set of words of
-                $\Sigma^*$
-              \item ``$\epsilon$'' denoting the set containing only the empty
-                string
-              \item $\forall a \in \Sigma$, ``$a$'' denoting the set containing
-                only the character a
+              \item ``$\emptyset$'' denoting the empty language
+              \item ``$\epsilon$'' denoting the language containing only the
+                empty string
+              \item $\forall a \in \Sigma$, ``$a$'' denoting the language
+                containing only the word containing only the character $a$
               \item for any regular expressions $E_1$ and $E_2$, ``$(E_1)
-                (E_2)$'' denoting the set of concatenations of a word of $E_1$
-                with a word of $E_2$
+                (E_2)$'' denoting the set of words formed of the concatenation
+                of a word of $E_1$ and a word of $E_2$
               \item for any regular expressions $E_1$ and $E_2$,
                 ``$(E_1)|(E_2)$'' denoting the union of words of $E_1$ and
                 $E_2$
               \item for any regular expression $E$, ``${(E)}^*$'' denoting the
-                set containing $\epsilon$ and any other concatenation of words
-                of $E$
+                language $\bigcup\limits_{i = 0}^\infty L^i$ where we
+                inductively define $L^0 = \{\epsilon\}$ and $L_i = L L_{i-1}$
+                for all $i > 0$
             \end{itemize}
 
           The languages denoted by regular expressions are regular languages,
@@ -250,8 +256,7 @@
         q_0}_\texttt{send} q_0 \underbrace{q_1q_1q_1q_1}_\texttt{hello} q_2
         \underbrace{q_2 q_2 q_2 q_2 q_3}_\texttt{world}$.
 
-        \begin{figure}[ht]%
-          \label{fig:automata_simple}
+        \begin{figure}[ht]
           \centering
           \begin{tikzpicture}[automaton, auto]
             \node[state,initial]   (1)              {$q_0$};
@@ -268,8 +273,11 @@
                   edge [loop above] node {$\Sigma \setminus \texttt \_$} ()
               (6) edge [loop above] node {$\Sigma$} ();
           \end{tikzpicture}
-          \caption{An automata recognising the same regular language as
-          \texttt{.*[\textasciicircum\_]+@[\textasciicircum\_]+.*}}
+          \caption{%
+            An automata recognising the same regular language as
+            \texttt{.*[\textasciicircum\_]+@[\textasciicircum\_]+.*}
+          }%
+          \label{fig:automata_simple}
         \end{figure}
 
     \subsection{Document spanners and regex formulas}
@@ -336,7 +344,7 @@
           $j$ letters of $\Sigma$ after ${\dashv}x$ in $r$.
         \end{definition}
 
-      \subsubsection{Sequential Variable Set Automata}
+      \subsubsection{Sequential variable set automata}
 
         Document spanners will here be represented using \textit{variable-set
         automata} (VAs). Transitions of a VA hold labels in $\Sigma \uplus
@@ -400,7 +408,8 @@
         % duplicates the mappings that are assigned to $d$ by the document
         % spanner of $A$.
 
-      \subsubsection{Regex Formulas}
+      \subsubsection{Regex formulas}%
+        \label{sec:regex_formula}
 
         We define \emph{regex formulas} as regular expressions as in
         Section~\ref{sec:def:regex} where we additionally allow \emph{variable
@@ -497,22 +506,9 @@
           \label{ex:intro-1}
         \end{figure}
 
-
-    \section{Related work}
-
-      \todo[inline]{%
-        Florenzano \& al \\
-        Anything else?
-      }
-
-
   \section{Enumeration algorithm}
 
-    \todo[inline]{Insert a definition of enumeration complexity somehow}
-
     \subsection{Formalisation of the problem}
-
-      \todo[inline]{Add  `valid'}
 
       We will consider the problem of the enumeration of all possible
       assignations of variables of an input VA over a document.
@@ -567,6 +563,13 @@
         polynomial preprocessing and delay in the input VA.
       \end{theorem}
 
+    \subsection{Related work}
+
+      \todo[inline]{%
+        Florenzano \& al \\
+        Anything else?
+      }
+
     \subsection{Outlines of the algorithm}
 
       We will introduce the outlines of how the algorithm proposed
@@ -578,7 +581,8 @@
       of variables $\mathcal{V}$, and the document $d \in \Sigma^*$ as the
       inputs of problem~\ref{pb:strong}.
 
-      \subsubsection{Mapping DAG}
+      \subsubsection{Mapping DAG}%
+        \label{sec:mapping_dag}
 
         The problem of enumerating the mappings captured by $\mathcal{A}$ can
         be reduced to that of enumerating path labels in a special kind of
@@ -618,26 +622,27 @@
         edge represents a step of the run, leading to a new state after either
         reading a marker edge or an $\epsilon$-transition.
 
-        Thus, this DAG can be built in time $O(TODO)$ by exploring all possible
-        states of a runs of $\mathcal{A}$ by using a basic graph exploration
-        (cf.  Algorithm~\ref{alg:build_dag}). Note that only the states that
-        are both accessible and co-accessible are interesting to compute
-        $\mu(\rho)$.
-
-        \begin{algorithm}[H]
-          \caption{Construction of a mapping DAG equivalent to $\mathcal{A}$}%
-          \label{alg:build_dag}
-          \begin{algorithmic}[1]
-            \State{TODO}
-          \end{algorithmic}
-        \end{algorithm}
-
-        \todo[inline]{Talk about the example}
+        The DAG $G$ we will work with will have the set of nodes $V = \{(q, i),
+        q \in Q, 0 \leq i \leq |d|\} \uplus \{v_f\}$, the initial vertex $v_0 =
+        (q_0, 0)$ and the final vertex $v_f$.  The set of edges $E$ will
+        contain an $\epsilon$-edge $((q, i), \epsilon, (q', i+1))$ when a
+        transition $(q, d_i, q') \in \Delta$ can be used while reading the
+        $i^{th}$ letter of $d$, a marker transition $((q, i), (m, i), (q', i))$
+        for any assignation $(q, m, q') \in \Delta$ (i.e. $m \in
+        \Gamma_\mathcal{V})$ and an $\epsilon$-edge  $((q, |d|), \epsilon,
+        v_f)$ when $q \in F$. Formally:
+          \[
+            E = \{((q, i), \epsilon, (q', i+1)), (q, d_i, q') \in \Delta\}
+                \uplus \{((q, i), (m, i), (q', i)), m \in \Gamma_\mathcal{V}
+                  \land (q, m, q') \in \Delta\}
+                \uplus \{(q, \epsilon, v_f), q \in V\}
+          \]
 
         We can also note that by construction, the mapping DAG that we build is
         \textit{leveled}. This formally sums up how the nodes of the automaton
         are added by sequentially reading letter of a word or adding a marker
-        edge without reading a letter.
+        edge without reading a letter. \cite{ICDT19} relies on this reduction
+        to build an efficient enumeration algorithm.
 
         \begin{definition}[\cite{ICDT19} Def. 3.8]
           A mapping DAG $G$ is leveled if its vertices $v = (q, i)$ are pairs
@@ -647,8 +652,8 @@
             \begin{itemize}
               \item for the initial vertex $v_0$ (which has no incoming edges),
                 the level is $0$
-              \item for every -edge from u to v, we have $level(v) = level(u) +
-                1$
+              \item for every $\epsilon$-edge from u to v, we have $level(v) =
+                level(u) + 1$
               \item for every marker edge from u to v, we have $level(v) =
                 level(u)$. Furthermore, all pairs $(m, i)$ in the label of the
                 edge have $i = level(v)$.
@@ -658,33 +663,12 @@
           the maximal number of vertices that have the same level.
         \end{definition}
 
-      \subsubsection{Enumeration for mapping DAGs}
-
-
-
-        \begin{algorithm}[H]
-          \caption{Enumeration from a mapping DAG (\cite{ICDT19} Alg. 1)}%
-          \label{alg:main_enum}
-          \begin{algorithmic}[1]
-            \Function{enum}{$G, \Lambda, \texttt{mapping}$}
-              \State{$\Lambda' \gets \Call{Jump}{\Lambda}$}
-              \If{$\Lambda'$ is the singleton $\{v_f\}$ of the final vertex}
-                \State{\Return{\texttt{mapping}}}
-              \Else{}
-                \For{%
-                  $(\texttt{locmark}, \Lambda'')$ in
-                  \Call{NextLevel}{$\Lambda'$}
-                }
-                  \State{%
-                    \Call{enum}{%
-                      $G, Lambda'', \texttt{locmark} \cup \texttt{mapping}$
-                    }
-                  }
-                \EndFor{}
-              \EndIf{}
-            \EndFunction{}
-          \end{algorithmic}
-        \end{algorithm}
+        \begin{theorem}[\cite{ICDT19} Th. 4.1]
+          Given a normalized leveled mapping DAG $G$ of depth $D$ and width
+          $W$, we can enumerate $\mathcal{M}(G)$ (without duplicates) with
+          preprocessing $O(|G| + D \times W^4 )$ and delay $O(W^2 \times (r +
+          1))$ where r is the size of each produced mapping.
+        \end{theorem}
 
         \begin{figure}
           \caption{%
@@ -695,60 +679,307 @@
           \center\includegraphics[width=5in]{figures/example_dag}
         \end{figure}
 
+      \subsubsection{Enumeration for mapping DAGs}
+
+        The enumeration over such a DAG is still a non-trivial task to perform.
+        The first issue we will face is that we need to make sure that we
+        output each mapping at most once, since checking if a mapping is really
+        in the output at each step of the enumeration algorithm whould cost
+        more that the constant delay we want to achieve.
+
+        To do so, the enumeration is performed by keeping track of a set
+        $\Lambda$ of vertices of $G$, included in a single level, together with
+        the set \texttt{mapping} of assignations that have been done in the
+        paths leading to vertices of $\Lamda$. In other words, \texttt{mapping}
+        is the maximal set of pairs $(m, i) \in \Gamma_\mathcal{V} \times
+        \mathbb{N}$ such that $(m, i)$ appears exactly once in every paths from
+        $v_0$ to a vertex of $\Lambda$.
+
+        Algorithm~\ref{alg:main_enum} describes how this process works. The
+        \textproc{Jump} function will be described in next section can be
+        considered to be the identity function for the moment without altering
+        correctness of the algorithm. The \textproc{NextLevel} function follows
+        marker edges inside of a level, enumerating all the pairs
+        $(\texttt{locmark}, \Lambda')$ such that \texttt{locmark} is the set of
+        the labels read for all paths from a vertex of $\Lambda$ to $\Lambda'$.
+        Intuitivelly, \textproc{NextEnum} allows to enumerate all the
+        ``choices'' of assignations that can be made inside a level, giving the
+        state $\Lambda'$ of the run that such a choice would result to.
+        Amarilli \& al.~\cite{ICDT19} introduce a methode to compute
+        \textproc{NextLevel} with constant delay by adapting a general approach
+        called ``flashlight search''.
+
+        \begin{algorithm}[H]
+          \caption{Enumeration from a mapping DAG (\cite{ICDT19} Alg. 1)}%
+          \label{alg:main_enum}
+          \begin{algorithmic}[1]
+            \State{%
+              precompute \textproc{JL}, \textproc{rlevel} and \textproc{reach}
+            }
+            \\
+            \Function{enum}{$\Lambda, \texttt{mapping}$}
+              \State{$\Lambda' \gets \Call{Jump}{\Lambda}$}
+              \If{$\Lambda'$ is the singleton $\{v_f\}$ of the final vertex}
+                \State{\textbf{send} \texttt{mapping}}
+              \Else{}
+                \For{%
+                  $(\texttt{locmark}, \Lambda'')$ in
+                  \Call{NextLevel}{$\Lambda'$}
+                }
+                  \State{%
+                    \Call{enum}{%
+                      $\Lambda'', \texttt{locmark} \cup \texttt{mapping}$
+                    }
+                  }
+                \EndFor{}
+              \EndIf{}
+            \EndFunction{}
+            \\
+            \For{mapping \textbf{in} \Call{enum}{$\{v_0\}, \emptyset$}}
+              \State{\textbf{output} \texttt{mapping}}
+            \EndFor{}
+          \end{algorithmic}
+        \end{algorithm}
+
+      \subsubsection{The Jump function}
+
+        Intuitively, $\Call{Jump}{\Lambda}$ computes the set of vertices
+        $\Lambda'$ that can be reached by following $\epsilon$-edges from
+        $\Lambda$ and that all belong first level where a path starting from
+        $\Lambda$ can contain a marker transition. This function will allow to
+        run Algorithm~\ref{alg:main_enum} with constant delay, by skipng
+        efficiently levels where no markers can be added to the mapping.
+
+        The \textproc{Jump} function requires to pre-compute various indexes
+        which are defined below.
+
+        \paragraph{jump level}
+
+          \textproc{JL} is defined for all $v \in V$ the minimal level
+          containing a vertex $v'$ such that $v'$ is reachable from $v$ and
+          $v'$ is either the final vertex or has an outgoing marker edge.
+
+          It can be computed in time $O(D \times W^2)$ by dynamic programming
+          and given these relations: $\Call{JL}{v} = level(v)$ if $v = v_f$ or
+          if $v$ has an outgoing marker edge, otherwise $\Call{JL}{v} =
+          \min\limits_{(v, v') \in E} \Call{JL}{v'}$.
+
+        \paragraph{reachables}
+
+          \textproc{Rlevel} is defined for any level $i$ as follows:
+          $\Call{Rlevel}{i} = \{\Call{JL}{v}, level(v) = i\}$. This can be
+          computed in time linear in $|G|$ since each vertex belongs to exactly
+          one level.
+
+        \paragraph{reachability matrix}
+
+          For any pair of levels $i < j$, $\Call{Reach}{i,j}$ is a boolean
+          matrix of size at most $W \times W$ which describe for any pair of
+          vertices $(u, v)$ such that $level(u) = i$ and $level(v) = j$ whether
+          there is a path for $u$ to $v$ whose last edge is labeled with an
+          $\epsilon$.
+
+          We only need to pre-compute $\Call{Reach}{i, j}$ for pairs $(i, j)$
+          such that $j \in \Call{Rlevel}{i}$. This can be done in time $O(D
+          \times W^{4})$ by using dynamic programming implemented using
+          $\Call{Reach}{i, j} = \Call{Reach}{i, i+1} \times \Call{Reach}{i+1,
+          j}$.
+
+        \paragraph{} Then, for any set of vertices $\Lambda$ subset of a level
+        of $G$, we can compute $\Call{Jump}{\Lambda}$ in time $O(W^2)$ by using
+        Algorithm~\ref{alg:jump}.
+
+        \begin{algorithm}[H]
+          \caption{The Jump function}%
+          \label{alg:jump}
+          \begin{algorithmic}[1]
+            \Function{Jump}{$\Lambda$}
+              \State{$i \gets level(v), \text{ for any } v \in \Lambda$}
+              \State{$j \gets \min\limits_{v \in \Lambda} \Call{JL}{v}$}
+              \If{$i = j$}
+                \State{\Return{$\Lambda$}}
+              \Else{}
+                \State{$M \gets \Call{Reach}{i, j}$}
+                \State{%
+                  \Return{$\{u \in V ~|~ level(u) = j \land (\exists v \in
+                  \Lambda, M_{u, v} = \texttt{true})\}$}
+                }
+              \EndIf{}
+            \EndFunction{}
+          \end{algorithmic}
+        \end{algorithm}
+
     \subsection{Related work}
 
 
-  \section{Implementation}
+  \section{Improvements of the algorithm}
 
-    % Some implementation details, out of a subsection
+    \subsection{Lowering memory complexity}
 
-    \subsection{Technical details}
+      The first issue that raised out of early implementations was that it
+      would not be reasonable to explicitly represent the whole DAG as it is
+      defined in Section~\ref{sec:mapping_dag}. Indeed, the graph is of size
+      $O(|\mathcal{A}| \times |d|)$ and the index of matrices \textproc{reach}
+      is of size $O(|d| \times W^3) \simeq O(|d| \times |V|^3)$.
 
-      \todo{%
-        Parler de Glushkov et du parsing dans l'overview de l'algo, pas
-        vraiment ici
-      }
+      % \begin{theorem}
+      %   Algorithm~\ref{alg:main_enum} can be modified to fit in memory $O(\min(K
+      %   \times |\mathcal{V}|, |d|) \times W^3)$ where $K$ is the number of
+      %   mappings of $G$.
+      % \end{theorem}
 
-      A first draft of the implementation of the algorithm was implemented
-      using Python 3, this programming language is known to be slow but its
-      flexibility allowed to get a working implementation after about a week of
-      work. The expression are parsed using a LALR parser for a custom grammar,
-      and are converted to an automata using Glushkov's algorithm.
+      % Even though this modification can still consume as much memory as it did
+      % on worst cases, it proved to make a huge difference on practical cases,
+      % especially when the output is small or when matches are concentrated in
+      % specific parts of the text.
 
-      I later built an implementation using Rust in order to be able to compare
-      performances of the algorithm with existing tools without suffering of
-      the overhead of Python. The regex crate of Rust allows to access the
-      AST of parsed regexps, but I still needed to compile the into automaton
-      using Glushkov's algorithm in order to handle variables.
+      The following parts will introduce two modifications to the algorithm:
+      computing \textproc{JL}, \textproc{Rlevel} and \textproc{Reach} in
+      streaming in order to remove $\epsilon$-edges from the graph and removing
+      unreachable states while we pre-compute theses structures.
 
-      These tools work similarly to other pattern matching tools like grep and
-      use the same regex syntax. Variables are defined out of named groups, and
-      instead of outputting a single match with a single assignation to groups,
-      it outputs the list of all possible assignations of groups of the
-      expressions.
+      In practice these modifications proved to be very efficient has they
+      allowed the algorithm to run with a memory cost constant in $d$ on most
+      cases we studied.
 
-      \todo{Introduire le naïf quelque-part par ici?}.
+      \subsubsection{Removing $\epsilon$-transitions}
 
-    \subsection{Limitations}
+        Notice that $\epsilon$-edges are never used in
+        Algorithm~\ref{alg:main_enum} since $\textproc{NextLevel}$ follows
+        marker edges only and $\textproc{Jump}$ relies on structures that
+        compactify the informations contained in these edges.
 
-      \todo[inline]{trucs pas time efficient (hashtables, matrices?)}
+        For any $v$ such that $level(v) = i$, $\Call{JL}{v}$,
+        $\Call{Rlevel}{i}$ and $\Call{Reach}{i, \cdot}$ are computed by
+        recursive formulas that only depend of of the values of \textproc{JL},
+        \textproc{Rlevel} and \textproc{Reach} for levels higher than $i$. This
+        leads to the following claim:
 
-    \subsection{Cleaning unreachable states}
+        \begin{theorem}
+          The constructions of \textproc{JL}, \textproc{Rlevel} and
+          \textproc{Reach} can be computed with no extra complexity given only
+          the input VA $\mathcal{A}$ and the document $d$.
+        \end{theorem}
 
+        Algorithm~\ref{alg:build_jl} show how to compute \textproc{JL} at the
+        same time as we build $G$ without any $\epsilon$-edge. The algorithm
+        can be adapted to compute \textproc{Rlevel} and \textproc{Reach} in a
+        similar way.
+
+        \begin{algorithm}[H]
+          \caption{Streaming computation of \textproc{JL}}%
+          \label{alg:build_jl}
+          \begin{algorithmic}[1]
+            \State{$V \gets \{v_f\}$}
+            \State{$E \gets \emptyset$}
+            \State{$\Call{JL}{v_f} \gets |d| + 1$}
+            \For{$q$ \textbf{in} $F$}
+              \State{$v \gets (q, |d|)$}
+              \State{$V \gets V \uplus \{v\}$}
+              \If{there is no marker transitions that start from $v$}
+                \State{$\Call{JL}{v} \gets |d|$}
+              \EndIf{}
+            \EndFor{}
+            \For{$i = |d|-1$ \textbf{down to} 0}
+              \For{$q$ \textbf{in} $Q$}
+                \State{$v \gets (q, i)$}
+                \State{$V \gets V \uplus \{v\}$}
+                \ForAll{$(q, a, q') \in \Delta$}
+                  \If{$a$ is a variable marker}
+                    \State{$v' \gets (q, i+1)$}
+                    \State{$E \gets E \uplus \{(v, (a, i), v')\}$}
+                    \State{$\Call{JL}{v} \gets i$}
+                  \ElsIf{$a = d_{i+1}$}
+                    \State{
+                      $\Call{JL}{v} \gets \Call{JL}{v'}$ \textbf{if}
+                      $\Call{JL}{v}$ is unassigned \textbf{else}
+                      $\min(\Call{JL}{v}, \Call{JL}{v'})$
+                    }
+                  \EndIf{}
+                \EndFor{}
+                \State{}
+              \EndFor{}
+            \EndFor{}
+          \end{algorithmic}
+        \end{algorithm}
+
+      \subsubsection{Cleaning useless states}
+
+        As vertices that or not accessible or not co-accessible can't be part
+        of an accepting path n $G$, they can be removed. This can be done by
+        computing two runs over $G$ after it is computed, one starting from the
+        initial vertex and one starting from the final vertex. One of the two
+        runs can be simulated at the same time as we build $G$, but either the
+        accessible or co-accessible states have to be constructed at some
+        point.
+
+        Also note that levels of the DAG that do not contain any marker edge
+        can also be removed from the DAG since the \textproc{Jump} function
+        can't reach them.
+
+        The second optimisation added to the algorithm is then to remove theses
+        unreachable nodes as soon as possible, which can be done by keeping
+        track of the number of edges starting from a vertex, when a vertex $v'$
+        is removed this counter is decremented for every vertex $v$ such that
+        there is a marker edge from $v$ to $v'$ or $v'$ is adjacent to $v$ in
+        the matrix $\Call{Reach}{level(v), level(v')}$.
+
+        Note that sadly this modification can still be has bad as the
+        unmodified algorithm, for example the graph obtained with the regex
+        \texttt{a*x\{a\{1000\}\}a*} over the document $d = aa \ldots aab$ will
+        only contain accessible vertices, except for vertices of the last
+        level.  Thus the compression operation will not be able to perform
+        until the last letter of $d$ is read.
 
   \section{Performance of the algorithm}
+
+    \subsection{Implementation}
+
+      A first draft of the implementation of the algorithm was implemented
+      using Python~3~\cite{implPython}, and a later efficient implementation
+      was rewritten using Rust~\cite{implRust}.
+
+      Theses implementations are built by a succession of supersteps:
+      \begin{enumerate}
+        \item a parser for the syntax of regex formulas, that convert an input
+          regular expression into an abstract syntax tree (AST)
+        \item an algorithm to compile this AST into an automaton, here
+          Glushkov's algorithm is used, modified as explained in
+          Section~\ref{sec:regex_formula}.
+        \item the pre-computation of our enumeration algorithm, that compiles
+          the matches of the automaton over a document into a compact structure
+        \item the enumeration over this structure
+      \end{enumerate}
+
+      The main unnecessary overhead of the implementation should be that it
+      saves all vertex-related informations in an Hashmap in order to
+      efficiently with the sparsity of the graph, and the fact that we must be
+      able to delete vertices efficiently. Some of theses structures may be
+      replaceable with a low level array, which would decrease the constant
+      cost of accessing these Hashtable.
+
+      The cleaning of useless states is implemented by running a pass after
+      building each level. After building level $i$ it would remove useless
+      states in the last $2^k$ levels for the highest $k$ such that $2^k$
+      divides $i$. This adds a logarithmic $O(\log |d|)$ factor but allows to
+      update \textproc{Reach} matrices less often, which is in practice rather
+      slow since it requires to perform a memory allocation.
 
     \subsection{Limitations of existing tools}
 
       Excepted for the naive algorithms and the work of Florenzano \&
-      al.~\todo{reference}, it is difficult to fairly compare to already
-      existing tools. Some of these tools allow to output a list of overlapping
-      matches, however this will at most output one match for each starting
-      position in the output document. Regex actually have a greedy semantic
-      for closures in the context of these tools, it will as a default match
-      the largest possible string for each closure and can be turned to a lazy
-      semantic where it only matches the smallest possible string. For
-      example over the text \texttt{abcde} by using gnu grep:
+      al.~\cite{florenzano2018constant}, it is difficult to fairly compare to
+      already existing tools. First, we will limit our tests to
+      Problem~\ref{pb:weak} in order to be able to compare the speed of our
+      algorithm with existing tools.
+
+      Some of these tools allow to output a list of overlapping matches,
+      however this will at most output one match for each starting position in
+      the output document. Regex actually have a greedy semantic for closures
+      in the context of these tools, it will as a default match the largest
+      possible string for each closure and can be turned to a lazy semantic
+      where it only matches the smallest possible string. For example over the
+      text \texttt{abcde} by using gnu grep:
         \begin{itemize}
           \item the regexp \texttt{...*} will output \texttt{abcde},
             \texttt{bcde}, \texttt{cde}, \texttt{de}
@@ -758,10 +989,76 @@
         \end{itemize}
       However, the output to the enumeration problem should contain all
       substrings of size at least 2, thus these two kinds of greedy semantics
-      don't need to be treated separatly.
+      don't need to be treated separately.
+
+      We will still compare our results with these tools but we need to
+      keep in mind that their output will be a subset of the output of our
+      algorithm.
 
     \subsection{Results}
 
+      We compared tools for several tools: our tool for its Rust implementation
+      (\texttt{dag\_rs}) and Python implementation (\texttt{dag\_py}), the
+      implementation of the algorithm of Florenzano \& al.
+      \cite{florenzano2018constant} (\texttt{SpannerConst}), naive algorithms
+      running in time $O(\mathcal{A} \times |d|^2)$ and $O(|d|^3)$ and finally,
+      \texttt{grep} and \texttt{ripgrep} will serve as our reference of
+      pre-existing tools.
+
+      The results of Figure~\ref{fig:bench} are quite representative of all the
+      results we got. The enumeration phase is very quick for our
+      implementation, the delay has never been measured to be greater than $50
+      \mu s$ (which gives a bandwidth greater than $2 \times 10^4$ matches/s).
+      As expected \texttt{grep} and \texttt{ripgrep} output less overlapping
+      matches than \texttt{SpannerConst} and our tool do.
+
+      The preprocessing phase is always much slower than the enumeration phase
+      and is the limiting part of the algorithm. Naive algorithms seem more
+      relevant than this tool when it comes to getting quickly a small subset
+      of the matches, but can't compete with a linear time algorithm on
+      outputting all the matches.
+
+      We noticed that \texttt{SpannerConst} is faster than our approach on most
+      cases, usually by a factor greater than 10. However the approach of the
+      algorithm relies on determinized automata on examples where an input
+      regex is very hard to determinize, the exponential cost of determinizing
+      this regex exceeds by far the time spent
+      processing~(Fig.~\ref{fig:hard_determinisation}).
+
+
+      \begin{figure}%
+        \label{fig:bench}
+        \caption{
+          Enumeration speed for our implementation (\texttt{dag\_rs}),
+          $R_1$~(\ref{sec:regex_glossary}), input document: 1MB of DNA }
+        \center\includegraphics[width=5in]{figures/bench_enum_only}
+      \end{figure}
+
+      \begin{figure}%
+        \label{fig:bench}
+        \caption{
+          Enumeration speed of the different algorithms, input regex:
+          $R_1$~(\ref{sec:regex_glossary}), input document: 1MB of DNA
+        }
+        \center\includegraphics[width=5in]{figures/bench}
+      \end{figure}
+
+      % \begin{figure}%
+      %   \label{fig:bench}
+      %   \caption{}
+      %   \center\includegraphics[width=5in]{figures/hard_determinisation}
+      % \end{figure}
+
+
+  \section{Conclusion}
+
+    The work of this internship enriched the algorithm described
+    in~\cite{ICDT19} to make it usable in practice.
+
+    Even though the chosen approach of not determinizing the input automaton
+    allows to avoid an exponential factor in the size of this automaton, it
+    doesn't seem to pay off compared to a determinized approach such as the
+    algorithm described by Florenzano \& al.~\cite{florenzano2018constant}.
 
   \pagebreak
   \bibliography{bibliography}
@@ -769,7 +1066,9 @@
 
 
   \pagebreak
-  \section{Appendices}
+  \section*{Appendices}
+
+    \todo[inline]{Maybe Glushkov here?}
 
     \subsection{Naive algorithm for the weak problem}
 
@@ -804,6 +1103,7 @@
         }
       \end{algorithm}
 
-
+    \subsection{Regex glossary}%
+      \label{sec:regex_glossary}
 
 \end{document}
