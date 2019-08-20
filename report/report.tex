@@ -54,7 +54,7 @@
 
     The problem of finding a substring from a text belonging to a given
     regular language has been widely studied. In particular Thompson
-    introduced an automata based approach in
+    introduced an automata-based approach in
     1968~\cite{thompson1968programming} which is now known as one of the
     fastest implementation for regular expressions~\cite{cox2007regular}.
 
@@ -74,34 +74,42 @@
         \item $d_3 \ldots d_{11} =
           \texttt{\textcolor{blue}{AUG}\textcolor{gray}{CGCUAA}\textcolor{red}{UAA}}$
       \end{itemize}
+      \pierre{The indexes (8,11) are wrong.}
 
-    By allowing overlapping matches, it also mean that the output can could be
-    of a quadratic size in the size of the input document. Thus, a classical
-    worst case complexity analysis cannot hope to be faster than $O(|d|^2)$.
-    This worst case behaviour is fairly easy to reach using the regex
+    By allowing overlapping matches, it also means that the output can could be
+    of a quadratic size in the size of the input document.
+    \pierre{Explain why} Thus, a classical
+    worst case complexity analysis cannot hope \pierre{Bad grammar, an
+    analysis does not ``hope'' anything, rephrase} to be faster than $O(|d|^2)$.
+    This worst-case behaviour is fairly easy to reach using the regex
     \texttt{.*} over any document $d$.
 
     Since the input of a pattern matching problem is typically big, this
-    quadratic factor is usually too expensive. Moreover, in many real world
+    quadratic factor is usually too expensive. Moreover, in many real-world
     cases, the output will actually be very small compared to the input.
 
-    Thus it will be more relevant to use a different complexity measure for
-    this problem, which is expressive about the size of the output. Here, we
+    Thus it will be \pierre{Avoid using future tense, no reason to use it
+    here.} more relevant to use a different complexity measure for
+    this problem, which is expressive \pierre{Not sure what you mean by
+    ``expressive''} about the size of the output. Here, we
     will use the complexity of enumeration, which integrates two measures:
-
     \begin{itemize}
       \item an upper bound on the time spent in the \textit{preprocessing}
         phase of the algorithm, this is the time spent computing before the
-        first result is outputted.
+        first result is outputted;
       \item an upper bound on the \textit{delay} of the algorithm, this is
         the maximum time elapsed between the output of two results of the
         algorithm.
     \end{itemize}
 
-    Amarilli~\&~al.~\cite{ICDT19} introduced an enumeration algorithm with a
+    Amarilli~et~al.~\cite{ICDT19} introduced an enumeration algorithm with a
     preprocessing phase linear in the size of the input document, and a delay
     independent of this size. My work was to adapt this algorithm for
     implementation and compare it to other existing tools.
+
+    \pierre{Announce here the outline of your report, explaining briefly
+    what it contains and how it reflects what you did in your
+    internship.}
 
 
   \section{Definitions}
