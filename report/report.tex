@@ -1,6 +1,7 @@
 \documentclass[12px]{article}
 
 \usepackage{algorithm}
+\usepackage{microtype}
 \usepackage[noend]{algpseudocode}
 \usepackage{amsthm}
 \usepackage{amssymb}
@@ -13,6 +14,7 @@
 \usepackage{mathtools}
 \usepackage{pdfpages}
 \usepackage{stmaryrd}
+\usepackage{amsfonts}
 \usepackage[textsize=small]{todonotes}
 \usepackage{xcolor}
 
@@ -33,7 +35,6 @@
 \DeclareMathOperator{\Ref}{Ref}
 \newcommand{\Span}[1]{\left[ #1 \right\rangle}
 
-
 \newcommand\restr[2]{{% we make the whole thing an ordinary symbol
   \left.\kern-\nulldelimiterspace % automatically resize the bar with \right
   #1 % the function
@@ -41,6 +42,7 @@
   \right|_{#2} % this is the delimiter
   }}
 
+\newcommand{\pierre}[1]{\textcolor{magenta}{[\textbf{Pierre:} #1]}}
 
 \title{%
   Internship Report --- M2 MPRI \\
@@ -59,11 +61,11 @@
 
   \section{Introduction}
 
-    The problem of finding a substring from a text belonging to a given
-    regular language has been widely studied. In particular Thompson
-    introduced an automaton based approach in
-    1968~\cite{thompson1968programming} which is now known as one of the
-    fastest implementation for regular expressions~\cite{cox2007regular}.
+    The problem of finding a substring from a text belonging to a given regular
+    language has been widely studied. In particular Thompson introduced an
+    automata-based approach in 1968~\cite{thompson1968programming} which is now
+    known as one of the fastest implementation for regular
+    expressions~\cite{cox2007regular}.
 
     However, as classical approaches simulate runs over a regular automaton
     while reading the input document linearly, they cannot output two
@@ -81,51 +83,66 @@
         \item $d_3 \ldots d_{11} =
           \texttt{\textcolor{blue}{AUG}\textcolor{gray}{CGCUAA}\textcolor{red}{UAA}}$
       \end{itemize}
+      \pierre{The indexes (8,11) are wrong.}
 
-    By allowing overlapping matches, it also mean that the output can could be
-    of a quadratic size in the size of the input document. Thus, a classical
-    worst case complexity analysis cannot hope to be faster than $O(|d|^2)$.
-    This worst case behaviour is fairly easy to reach using the regex
+    By allowing overlapping matches, it also means that the output can could be
+    of a quadratic size in the size of the input document.
+    \pierre{Explain why} Thus, a classical
+    worst case complexity analysis cannot hope \pierre{Bad grammar, an
+    analysis does not ``hope'' anything, rephrase} to be faster than $O(|d|^2)$.
+    This worst-case behaviour is fairly easy to reach using the regex
     \texttt{.*} over any document $d$.
 
     Since the input of a pattern matching problem is typically big, this
-    quadratic factor is usually too expensive. Moreover, in many real world
+    quadratic factor is usually too expensive. Moreover, in many real-world
     cases, the output will actually be very small compared to the input.
 
-    Thus it will be more relevant to use a different complexity measure for
-    this problem, which is expressive about the size of the output. Here, we
+    Thus it will be \pierre{Avoid using future tense, no reason to use it
+    here.} more relevant to use a different complexity measure for
+    this problem, which is expressive \pierre{Not sure what you mean by
+    ``expressive''} about the size of the output. Here, we
     will use the complexity of enumeration, which integrates two measures:
-
     \begin{itemize}
       \item an upper bound on the time spent in the \textit{preprocessing}
         phase of the algorithm, this is the time spent computing before the
-        first result is outputted.
+        first result is outputted;
       \item an upper bound on the \textit{delay} of the algorithm, this is
         the maximum time elapsed between the output of two results of the
         algorithm.
     \end{itemize}
 
-    Amarilli~\&~al.~\cite{ICDT19} introduced an enumeration algorithm with a
+    Amarilli~et~al.~\cite{ICDT19} introduced an enumeration algorithm with a
     preprocessing phase linear in the size of the input document, and a delay
     independent of this size. My work was to adapt this algorithm for
     implementation and compare it to other existing tools.
 
+    \pierre{You really need to discuss motivations here: genomics,
+    security auditing through log report analysis, information
+    extraction, etc.}
+
+    \pierre{Announce here the outline of your report, explaining briefly
+    what it contains and how it reflects what you did in your
+    internship.}
+
 
   \section{Definitions}
 
+  \pierre{Don't just start new subsections, give a high-level view of the
+  section}
+
     \subsection{Regular expressions and regular languages}
 
-      \subsubsection{Finite Automata}
+      \subsubsection{Finite automata}
 
       \begin{definition}
-        A finite automaton $\mathcal{A}$ over a finite alphabet $\Sigma$ is a
-        tuple $(Q, q_\text{init}, \Delta, F)$ where:
+        A \textit{finite automaton} $\mathcal{A}$ over a finite alphabet
+        $\Sigma$ is a tuple $(Q, q_\text{init}, \Delta, F)$ where:
           \begin{itemize}
-            \item $Q$ is the finite set of states
-            \item $q_\text{init} \in Q$ is the initial states
-            \item $F \subseteq Q$ is the set of final states
+            \item $Q$ is the finite set of states;
+            \item $q_\text{init} \in Q$ is the initial states;
+            \item $F \subseteq Q$ is the set of final states;
             \item $\Delta \subseteq Q \times \Sigma \times Q$ is the transition
-              function
+              function.
           \end{itemize}
 
           A \textit{run} $\rho$ of $\mathcal{A}$ over an input word $w= w_1 w_2
@@ -145,11 +162,10 @@
 
         Figure~\ref{fig:automata_simple} shows a standard visual representation
         for the example of an automaton $\mathcal{A} = (\{q_0, q_1, q_2, q_3\},
-        \{q_0\}, \{(q_0, a, q_0), a \in \Sigma\} \cup \cdots \cup \{(q_1,
+        \{q_0\}, \{(q_0, a, q_0)\mid a \in \Sigma\} \cup \cdots \cup \{(q_1,
         \texttt{@}, q_2)\},\{q_3\})$. In this representation given $q \in Q$
         and $q' \in Q$ a set of transitions $(q, a, q')$ for all $a \in A
-        \subseteq \Sigma$ will be merged in a transition denoted by the set
-        $A$: $(q, A, q')$.
+        \subseteq \Sigma$ will be represented as a transition $(q, A, q')$.
 
       \subsubsection{Regular expressions}%
         \label{sec:def:regex}
@@ -158,24 +174,23 @@
           \label{def:regex}
           We define \emph{regular expressions} inductively as the expressions
           that allows:
-          $\Sigma$ can recursively be defined as the language containing:
             \begin{itemize}
-              \item ``$\emptyset$'' denoting the empty language
+              \item ``$\emptyset$'' denoting the empty language;
               \item ``$\epsilon$'' denoting the language containing only the
-                empty string
+                empty string;
               \item $\forall a \in \Sigma$, ``$a$'' denoting the language
-                containing the word containing only the character $a$
+                containing the word containing only the character~$a$
               \item for any regular expressions $E_1$ and $E_2$, ``$(E_1)
                 (E_2)$'' denoting the language of words formed of the
                 concatenation of a word of $E_1$ and a word of $E_2$
-              \item for any regular expressions $E_1$ and $E_2$,
-                ``$(E_1)|(E_2)$'' denoting the union of words of $E_1$ and
-                $E_2$
+              \item for any regular expressions $E_1$ and~$E_2$,
+                ``$(E_1)|(E_2)$'' denoting the union of words of $E_1$
+                and~$E_2$
               \item for any regular expression $E$, ``${(E)}^*$'' denoting the
                 language $\bigcup_{i = 0}^\infty L^i$ where $L$ is the
                 language denoted by $E$ and where we inductively define $L^0 =
                 \{\epsilon\}$ and $L^i = \{uv \mid u \in L \land v \in
-                L^{i-1}\}$ for all $i > 0$
+                L^{i-1}\}$ for all $i > 0$.
             \end{itemize}
 
           The languages denoted by regular expressions are the regular
@@ -183,7 +198,7 @@
 
         \end{definition}
 
-        \paragraph{Extra notations}
+        \paragraph{Extra notation}
           Some extra syntax can be introduced to make the regular expressions
           more pleasant to use without changing their expressiveness, some of
           it will be used to make examples more readable in this report. Let us
@@ -191,24 +206,28 @@
             \begin{itemize}
               \item for any $s \subseteq \Sigma$, ``$[S]$'' denotes the
                 language containing all the words containing exactly one
-                character of $S$.  ``$[\texttt{\textasciicircum}S]$'' denotes
-                the same language as ``$[\Sigma \setminus S]$''
-              \item ``.'' denotes the same language as ``$[\Sigma]$''
+                character of $S$, while ``$[\texttt{\textasciicircum}S]$''
+                denotes the same language as ``$[\Sigma \setminus S]$'';
+              \item ``.'' denotes the same language as ``$[\Sigma]$'';
               \item for any regular expression $E$ and $0 \leq n \leq m$,
                 ``$(E)\{n,m\}$'' denotes the language $\bigcup_{i=n}^m
                 L^i$ where $L$ is the language denoted by $E$ Intuitively it
-                contains repetitions of between $n$ and $m$ words of $E$
+                contains repetitions of between $n$ and $m$ words of $E$;
               \item for any regular expression $E$ and $n \in \mathbb{N}$,
-                ``E\{n\}'' denotes the same language as ``E\{n, n\}''
+                ``E\{n\}'' denotes the same language as ``E\{n, n\}''.
             \end{itemize}
 
-          Parentheses can be avoided with the following conventions: closure
-          has higher precedence than concatenation which has higher precedence
-          than union. For example, \texttt{hello|world!*} and
-          \texttt{(hello)|((world)(!*))} denotes the same language:
+          Parentheses can be avoided with the following conventions: ${}^*$ has
+          higher precedence than concatenation which has higher precedence than
+          union. For example, \texttt{hello|world!*} stands for
+          \texttt{(hello)|((world)((!)*))}. This in turn, denotes the set
           $\{\texttt{hello}, \texttt{world}, \texttt{world!}, \texttt{world!!},
           \ldots\}$.
 
+          \pierre{You are mixing up regular expressions written in
+          italics as mathematical formulas, and written in typewriter
+          fonts as code; it would be better to use only one
+          convention.}
 
       \subsubsection{Classical algorithms}
 
@@ -240,9 +259,9 @@
         \vspace{0.5cm}
 
         The next main issue is then to find an automaton that recognises the
-        language of an input regular expression. Thompson's algorithm
-        introduces operation to recursively apply the operations of union,
-        concatenation and closure to the automata representing
+        language of an input regular expression of size~$n$. Thompson's
+        recursively applies the operations of union, concatenation and closure
+        to the automata representing
         subexpressions~\cite{thompson1968programming}. This process is linear
         in the size of the expression but the resulting automata contains
         $\epsilon$-transitions that can be removed in time $O(n^2)$.
@@ -313,8 +332,14 @@
         In the context of \textit{document} spanners, a word over $\Sigma^*$
         will be called a \textit{document}.
 
+        \pierre{You need some text here, in particular commenting on the
+        literature on spanners.}
+
+      \pierre{This subsection is not really about document spanners, you
+      don't define them yet.}
+
         \begin{definition}
-          Given $\Sigma$ a finite alphabet and a document $d \in \Sigma^*$, a
+          Given a finite alphabet $\Sigma$ and a document $d \in \Sigma^*$, a
           \textit{span} of $d$ is a pair $\Span{i, j}$ with $0 \leq i \leq j
           \leq |d|$ which represents a substring of $d$ starting at position
           $i$ and ending at position $j - 1$.
@@ -411,7 +436,8 @@
           Given a finite alphabet $\Sigma$ and a finite set of variables
           $\mathcal{V}$, a VA is defined as a tuple $A = (Q, q_\text{init},
           \Delta, F)$ where $\Delta \subseteq Q \times (\Sigma \uplus
-          \Gamma_\mathcal{V}) \times Q$.
+          \Gamma_\mathcal{V}) \times Q$. And $Q$, $q_\text{init}$, $F$ are as
+          in the definition of a finite automaton.
 
           % TODO: Là encore, "accepting d", "accepting r" n'est pas
           % compréhensible, il faut dire "The run \rho is an accepting run (on
@@ -476,12 +502,12 @@
       \subsubsection{Regex formulas}%
         \label{sec:regex_formula}
 
-        We define \emph{regex formulas} as regular expressions as in
-        Section~\ref{sec:def:regex} where we additionally allow \emph{variable
+        We define \emph{regex formulas} as regular expressions (as in
+        Section~\ref{sec:def:regex}) where we additionally allow \emph{variable
         captures}, i.e.\ assigning spans of the documents matched by parts of
         the expression to variables.
 
-        \begin{definition}[\cite{peterfreund} Sec.\ 2.2.2]
+        \begin{definition}[\cite{peterfreund}, Sec.\ 2.2.2]
           The set of regex formulas is closed under the same rules as in
           Section~\ref{sec:def:regex} with the addition of the following: for
           any regex formula $E$ and variable $x \in \mathcal{V}$, $x\{E\}$ is a
@@ -492,9 +518,9 @@
             \begin{itemize}
               \item if $E = x\{E'\}$ for some regex formula $E'$, then $E$ denotes
                 the set of words of the form $x{\vdash} u {\dashv}x$ where $u$ is
-                in the language denoted by $E'$
-              \item the rules of closure, union and concatenation apply in the same
-                way as they do for regular expressions
+                in the language denoted by $E'$;
+              \item the rules of closure, union, and concatenation apply in the same
+                way as they do for regular expressions.
             \end{itemize}
 
           We say that a regex formula $E$ is \textit{sequential} if every
@@ -529,13 +555,16 @@
         done by converting $E$ into a regular expression over $\Sigma \uplus
         \Gamma_\mathcal{V}$, replacing any occurrence of the form $x\{E'\}$
         with $x{\vdash} E {\dashv}x$. The automaton obtained by Glushkov
-        algorithms can be interpreted as a VA equivalent to $E$.
+        algorithm can be interpreted as a VA equivalent to $E$.
 
       \subsubsection{Example}
 
         Let us modify the example of Section~\ref{sec:example_simple} to
         extract the position of an email-like pattern into a variable:
         \texttt{.*x\{[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+\}.*}.
+
+        \pierre{You should use a different typeface for $x{\cdot}$ than
+        for literal characters, to avoid confusion.}
 
         Figure~\ref{fig:automata} represents a VA that induces the same
         document spanner as this regex.
@@ -645,7 +674,7 @@
     \subsection{Related work}
 
       \todo[inline]{%
-        Florenzano \& al \\
+        Florenzano et al \\
         Anything else?
       }
 
@@ -1021,24 +1050,26 @@
       using Python~3~\cite{implPython}, and a later efficient implementation
       was rewritten using Rust~\cite{implRust}.
 
-      Theses implementations are built by a succession of supersteps:
+      These implementations are built by a succession of supersteps:
       \begin{enumerate}
         \item a parser for the syntax of regex formulas, that convert an input
-          regular expression into an abstract syntax tree (AST)
-        \item an algorithm to compile this AST into an automaton, here
+          regular expression into an abstract syntax tree (AST);
+        \item an algorithm to compile this AST into an automaton; here
           Glushkov algorithm is used, modified as explained in
-          Section~\ref{sec:regex_formula}.
+          Section~\ref{sec:regex_formula};
         \item the pre-computation of our enumeration algorithm, that compiles
-          the matches of the automaton over a document into a compact structure
-        \item the enumeration over this structure
+          the matches of the automaton over a document into a compact
+          structure;
+        \item the enumeration over this structure.
       \end{enumerate}
 
-      The main unnecessary overhead of the implementation should be that it
-      saves all vertex-related informations in an Hashmap in order to
-      efficiently with the sparsity of the graph, and the fact that we must be
-      able to delete vertices efficiently. Some of theses structures may be
-      replaceable with a low level array, which would decrease the constant
-      cost of accessing these Hashtable.
+      The main unnecessary overhead of the implementation as it stands is that
+      it saves all vertex-related informations in an hash table data structure
+      in order to efficiently deal with the sparsity of the graph, and with the
+      fact that we must be able to delete vertices efficiently. Some of theses
+      structures may be replaceable with a low-level array, which would
+      decrease the constant cost of accessing these hash tables and the
+      corresponding memory usage.
 
       The cleaning of useless states is implemented by running a pass after
       building each level. After building level $i$ it would remove useless
@@ -1049,29 +1080,34 @@
 
     \subsection{Limitations of existing tools}
 
-      Excepted for the naive algorithms and the work of Florenzano \&
-      al.~\cite{florenzano2018constant}, it is difficult to fairly compare to
+      Except for the naive algorithms and the work of Florenzano et
+      al.~\cite{florenzano2018constant} \pierre{These should really be
+      discussed as a separate subsection}, it is difficult to fairly compare to
       already existing tools. First, we will limit our tests to
       Problem~\ref{pb:weak} in order to be able to compare the speed of our
       algorithm with existing tools.
 
-      Some of these tools allow to output a list of overlapping matches,
+      Some of these tools \pierre{Which tools? You really need to discuss
+      existing tools in detail} allow to output a list of overlapping matches,
       however this will at most output one match for each starting position in
-      the output document. Regex actually have a greedy semantic for closures
-      in the context of these tools, it will as a default match the largest
-      possible string for each closure and can be turned to a lazy semantic
-      where it only matches the smallest possible string. For example over the
-      text \texttt{abcde} by using gnu grep:
+      the output document. Regular expressions actually have a greedy semantic
+      for closures in the context of these tools, it will as a default match
+      the largest possible string for each closure and can be turned to a lazy
+      semantic where it only matches the smallest possible string. For example
+      over the text \texttt{abcde} by using GNU grep \pierre{How do you use
+      grep to return multiple matches? Don't you want to refer to another
+      implementation?}:
         \begin{itemize}
           \item the regexp \texttt{...*} will output \texttt{abcde},
-            \texttt{bcde}, \texttt{cde}, \texttt{de}
+            \texttt{bcde}, \texttt{cde}, \texttt{de};
           \item the regexp \texttt{...*?} (where \texttt{*?} is the lazy
             version of \texttt{*}) will output \texttt{ab}, \texttt{bc},
-            \texttt{cd} and \texttt{de}
+            \texttt{cd} and \texttt{de}.
         \end{itemize}
       However, the output to the enumeration problem should contain all
       substrings of size at least 2, thus these two kinds of greedy semantics
-      don't need to be treated separately.
+      don't need to be treated separately. \pierre{This is not the main
+      message I get: I get more that these semantics are not appropriate}
 
       We will still compare our results with these tools but we need to
       keep in mind that their output will be a subset of the output of our
@@ -1079,13 +1115,14 @@
 
     \subsection{Results}
 
-      We compared tools for several tools: our tool for its Rust implementation
+      We compared performances of several tools: our Rust implementation
       (\texttt{dag\_rs}) and Python implementation (\texttt{dag\_py}), the
-      implementation of the algorithm of Florenzano \& al.
-      \cite{florenzano2018constant} (\texttt{SpannerConst}), naive algorithms
-      running in time $O(\mathcal{A} \times |d|^2)$ and $O(|d|^3)$ and finally,
-      \texttt{grep} and \texttt{ripgrep} will serve as our reference of
-      pre-existing tools.
+      implementation of the algorithm of Florenzano et al.
+      \cite{florenzano2018constant} (\texttt{SpannerConst}) \pierre{Say where
+      you found it}, naive algorithms running in time $O(\mathcal{A} \times
+      |d|^2)$ and $O(|d|^3)$ \pierre{Again, they need to be described} and
+      finally, \texttt{grep} and \texttt{ripgrep} \pierre{Again, they need to
+      be described} will serve as our reference of pre-existing tools.
 
       The results of Figure~\ref{fig:bench} are quite representative of all the
       results we got. The enumeration phase is very quick for our
@@ -1105,24 +1142,30 @@
       algorithm relies on determinized automata on examples where an input
       regex is very hard to determinize, the exponential cost of determinizing
       this regex exceeds by far the time spent
-      processing~(Fig.~\ref{fig:hard_determinisation}).
+      processing~(Figure~\ref{fig:hard_determinisation}).
 
 
       \begin{figure}%
-        \label{fig:bench}
         \caption{
           Enumeration speed for our implementation (\texttt{dag\_rs}),
           $R_1$~(\ref{sec:regex_glossary}), input document: 10MB of DNA }
         \center\includegraphics[width=5in]{figures/bench_enum_only}
+
+        \pierre{In the axis legend, ``outputed yet'' should be
+        ``output''}
       \end{figure}
 
       \begin{figure}%
-        \label{fig:bench}
         \caption{
           Enumeration speed of the different algorithms, input regex:
           $R_1$~(\ref{sec:regex_glossary}), input document: 10MB of DNA
         }
+        \label{fig:bench} \pierre{Same label as previous figure???}
         \center\includegraphics[width=5in]{figures/bench}
+        \pierre{In the axis legend, ``outputed yet'' should be
+        ``output''}
+        \pierre{Move the key somewhere it does not overlap with the
+        graphs...}
       \end{figure}
 
       % \begin{figure}%
@@ -1140,7 +1183,7 @@
     Even though the chosen approach of not determinizing the input automaton
     allows to avoid an exponential factor in the size of this automaton, it
     doesn't seem to pay off compared to a determinized approach such as the
-    algorithm described by Florenzano \& al.~\cite{florenzano2018constant}.
+    algorithm described by Florenzano et al.~\cite{florenzano2018constant}.
 
   \pagebreak
   \bibliography{bibliography}
