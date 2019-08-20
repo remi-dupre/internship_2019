@@ -3,6 +3,7 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{amsthm}
+\usepackage{amssymb}
 \usepackage{babel}
 \usepackage{enumitem}
 \usepackage[T1]{fontenc}
@@ -32,6 +33,15 @@
 \DeclareMathOperator{\Ref}{Ref}
 \newcommand{\Span}[1]{\left[ #1 \right\rangle}
 
+
+\newcommand\restr[2]{{% we make the whole thing an ordinary symbol
+  \left.\kern-\nulldelimiterspace % automatically resize the bar with \right
+  #1 % the function
+  \vphantom{\big|} % pretend it's a little taller at normal size
+  \right|_{#2} % this is the delimiter
+  }}
+
+
 \title{%
   Internship Report --- M2 MPRI \\
   Constant delay enumeration for documents spanners
@@ -51,7 +61,7 @@
 
     The problem of finding a substring from a text belonging to a given
     regular language has been widely studied. In particular Thompson
-    introduced an automata based approach in
+    introduced an automaton based approach in
     1968~\cite{thompson1968programming} which is now known as one of the
     fastest implementation for regular expressions~\cite{cox2007regular}.
 
@@ -109,10 +119,10 @@
 
       \begin{definition}
         A finite automaton $\mathcal{A}$ over a finite alphabet $\Sigma$ is a
-        tuple $(Q, I, \Delta, F)$ where:
+        tuple $(Q, q_\text{init}, \Delta, F)$ where:
           \begin{itemize}
             \item $Q$ is the finite set of states
-            \item $I \subseteq Q$ is the set of initial states
+            \item $q_\text{init} \in Q$ is the initial states
             \item $F \subseteq Q$ is the set of final states
             \item $\Delta \subseteq Q \times \Sigma \times Q$ is the transition
               function
@@ -121,16 +131,16 @@
           A \textit{run} $\rho$ of $\mathcal{A}$ over an input word $w= w_1 w_2
           \ldots w_n \in \Sigma^*$ is a sequence of transitions $(q_0, w_1,
           q_1)$, $(q_1, w_2, q_2), \ldots, (q_{n-1}, w_n, q_n) \in \Delta^*$
-          where $q_0 \in I$. It is \textit{accepting} if $q_n \in F$.
+          where $q_0 = q_\text{init}$. It is \textit{accepting} if $q_n \in F$.
 
           If an accepting run exists over an input word $w$, then $w$ is
           \textit{accepted}. The language $L(\mathcal{A})$ recognized by the
           automaton is the set of words accepted by the automaton. Languages
           recognized by an automaton are called \textit{regular}.
 
-          An automaton is called \textit{deterministic} if $|I| = 1$ and for
-          any pair of state $q \in Q$ and letter $a \in \Sigma$ there is at
-          most one transition $(q, a, q')$ in $\Delta$.
+          An automaton is called \textit{deterministic} if for any pair of
+          state $q \in Q$ and letter $a \in \Sigma$ there is at most one
+          transition $(q, a, q')$ in $\Delta$.
         \end{definition}
 
         Figure~\ref{fig:automata_simple} shows a standard visual representation
@@ -144,7 +154,8 @@
       \subsubsection{Regular expressions}%
         \label{sec:def:regex}
 
-        \begin{definition}
+        \begin{definition}%
+          \label{def:regex}
           We define \emph{regular expressions} inductively as the expressions
           that allows:
           $\Sigma$ can recursively be defined as the language containing:
@@ -153,105 +164,118 @@
               \item ``$\epsilon$'' denoting the language containing only the
                 empty string
               \item $\forall a \in \Sigma$, ``$a$'' denoting the language
-                containing only the word containing only the character $a$
+                containing the word containing only the character $a$
               \item for any regular expressions $E_1$ and $E_2$, ``$(E_1)
-                (E_2)$'' denoting the set of words formed of the concatenation
-                of a word of $E_1$ and a word of $E_2$
+                (E_2)$'' denoting the language of words formed of the
+                concatenation of a word of $E_1$ and a word of $E_2$
               \item for any regular expressions $E_1$ and $E_2$,
                 ``$(E_1)|(E_2)$'' denoting the union of words of $E_1$ and
                 $E_2$
               \item for any regular expression $E$, ``${(E)}^*$'' denoting the
-                language $\bigcup\limits_{i = 0}^\infty L^i$ where we
-                inductively define $L^0 = \{\epsilon\}$ and $L_i = L L_{i-1}$
-                for all $i > 0$
+                language $\bigcup_{i = 0}^\infty L^i$ where $L$ is the
+                language denoted by $E$ and where we inductively define $L^0 =
+                \{\epsilon\}$ and $L^i = \{uv \mid u \in L \land v \in
+                L^{i-1}\}$ for all $i > 0$
             \end{itemize}
 
-          The languages denoted by regular expressions are regular languages,
-          (the languages recognised by finite automata).
+          The languages denoted by regular expressions are the regular
+          languages.
+
         \end{definition}
 
         \paragraph{Extra notations}
-          Some extra syntax can be introduced to make the
-          regular expressions more pleasant to use, some of it will be used to
-          make examples more readable in this report:
+          Some extra syntax can be introduced to make the regular expressions
+          more pleasant to use without changing their expressiveness, some of
+          it will be used to make examples more readable in this report. Let us
+          extend the inductive cases of definition~\ref{def:regex}:
             \begin{itemize}
-              \item ``.'' denotes the entire alphabet $\Sigma$
+              \item for any $s \subseteq \Sigma$, ``$[S]$'' denotes the
+                language containing all the words containing exactly one
+                character of $S$.  ``$[\texttt{\textasciicircum}S]$'' denotes
+                the same language as ``$[\Sigma \setminus S]$''
+              \item ``.'' denotes the same language as ``$[\Sigma]$''
               \item for any regular expression $E$ and $0 \leq n \leq m$,
-                ``$(E)\{n,m\}$'' denotes the languages of words containing
-                concatenation of between $n$ and $m$ words of $E$
-                ``$(E)\{n\}$'' denotes the set of words that are concatenation
-                of exactly $n$ words of $E$
-              \item for any $w \in \Sigma^*$,
-                ``$[\texttt{\textasciicircum}w]$'' denotes all the words of one
-                letter which is not part of $w$
-              \item parenthesis can be avoided with the following conventions:
-                closure has an higher precedence than concatenation which has
-                higher precedence than union. For example,
-                \texttt{hello|world!*} denotes the set $\{hello, world, world!,
-                world!!, world!!!, \ldots\}$
+                ``$(E)\{n,m\}$'' denotes the language $\bigcup_{i=n}^m
+                L^i$ where $L$ is the language denoted by $E$ Intuitively it
+                contains repetitions of between $n$ and $m$ words of $E$
+              \item for any regular expression $E$ and $n \in \mathbb{N}$,
+                ``E\{n\}'' denotes the same language as ``E\{n, n\}''
             \end{itemize}
+
+          Parentheses can be avoided with the following conventions: closure
+          has higher precedence than concatenation which has higher precedence
+          than union. For example, \texttt{hello|world!*} and
+          \texttt{(hello)|((world)(!*))} denotes the same language:
+          $\{\texttt{hello}, \texttt{world}, \texttt{world!}, \texttt{world!!},
+          \ldots\}$.
+
 
       \subsubsection{Classical algorithms}
 
-        Given a deterministic finite automaton $\mathcal{A} = (Q, I, \Delta,
+        Given a deterministic finite automaton $\mathcal{A} = (Q, q_0, \Delta,
         F)$, it is possible to determine in time $O(|d|)$ whether the input
-        document $d$ is part of the language recognised by $\mathcal{A}$. It
-        only requires to simulate a run of the automaton while keeping in
-        memory the only possible state $q_i$ reading $d_i$: initially $\{q_0\}
-        = I$ and for each $1 \leq i \leq |d|$, $q_{i}$ is the only possible
-        state such that $(q_{i-1}, d_i, q_i) \in \Delta$ if any, otherwise
-        there is no run labeled with $d$ over $\mathcal{A}$. Finally, if the is
-        such a run and it is valid ($q_n \in F$), $d \in L(\mathcal{A})$.
+        word $d$ belongs to the language recognized by $\mathcal{A}$. To do
+        this, we only need to simulate a run of the automaton while keeping in
+        memory the only possible state $q_i$ that the automaton reaches just
+        after it has read $d_i$: initially $q_0 = q_\text{init}$ and for each
+        $1 \leq i \leq |d|$, $q_{i}$ is the only possible state such that
+        $(q_{i-1}, d_i, q_i) \in \Delta$ if any, otherwise there is no run of
+        $\mathcal{A}$ over $d$. Finally, if there is such a run and it is valid
+        ($q_n \in F$), then $d \in L(\mathcal{A})$.
 
-        If $\mathcal{A}$ is not deterministic, it is still possible to perform
-        the same operation in time $O(|\mathcal{A}| |d|)$: it requires to
-        simulate all possible runs by keeping the set $Q_i$ of all possible
-        states of the execution of $A$ while reading $d_i$. If $\mathcal{A} =
-        (Q, I, \delta, F)$:
+        If $\mathcal{A}$ is not deterministic, it is also possible whether $d
+        \in L(\mathcal{A})$ in time $O(|\mathcal{A}| |d|)$ by keeping the set
+        $Q_i$ of all possible states of the execution of $A$ while reading
+        $d_i$. If $\mathcal{A} = (Q, q_\text{init}, \delta, F)$:
         \begin{itemize}
-          \item $Q_0 = I$
-          \item $\forall 1 \leq i \leq |d|, Q_i = \{(q', d_i, q'') \in \delta,
+          \item $Q_0 = \{q_\text{init}\}$
+          \item $\forall 1 \leq i \leq |d|, Q_i = \{q'' \in Q \mid (q', d_i,
+            q'') \in \delta,
             q' \in Q_{i-1}\}$
         \end{itemize}
         Finally, there is a valid run of $\mathcal{A}$ over $d$ if $Q_{|d|}
-        \bigcap F \neq \emptyset$.
+        \bigcap F \neq \emptyset$, in such a case we have $d \in
+        L(\mathcal{A})$.
 
         \vspace{0.5cm}
 
-        The next main issue is then to find an automata that recognises the
+        The next main issue is then to find an automaton that recognises the
         language of an input regular expression. Thompson's algorithm
         introduces operation to recursively apply the operations of union,
-        concatenation and closure to the automatons representing
+        concatenation and closure to the automata representing
         subexpressions~\cite{thompson1968programming}. This process is linear
         in the size of the expression but the resulting automata contains
         $\epsilon$-transitions that can be removed in time $O(n^2)$.
 
-        Glushkov's algorithm in the other hand can also compute the same
+        Glushkov algorithm on the other hand can also compute the same
         automaton with no $\epsilon$-transitions, by recursively computing the
-        set of the first letters, last letters and factor two of the words in
-        the regular language~\cite{glushkov1961abstract}. This process takes
-        time $O(n^2)$.
+        set of the first letters, last letters and factor of length two of the
+        words in the regular language~\cite{glushkov1961abstract}. This process
+        takes time $O(n^2)$. As this more mathematical construction is more
+        convenient to work with, we will use Glushkov algorithm to compile
+        regular expressions into automatons here.
 
       \subsubsection{Example}%
-
         \label{sec:example_simple}
 
-        Let us consider the example of the regular expression $E =$
-        \texttt{.*[\textasciicircum\_]+@[\textasciicircum\_]+.*} over the
-        alphabet $\Sigma = \{a, b, \ldots, z, @, \texttt \_, \vdash, \dashv\}$.
-        The central part (\texttt{[\textasciicircum\_]+@[\textasciicircum\_]+})
-        of the expression matches an email-like pattern defined as a non-empty
-        sequence of non-space characters (\texttt{[\textasciicircum\_]+})
-        followed by \texttt{@}, followed by another non-empty sequence of
-        non-space characters. The email-like pattern can be surrounded by any
-        prefix or suffix.
+        Let us consider the simple example inspired from~\cite{ICDT19} of the
+        regular expression $E =$
+        \texttt{.*[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+.*}
+        over the alphabet $\Sigma = \{a, b, \ldots, z, @, \texttt
+        \textvisiblespace, \vdash, \dashv\}$.  The central part
+        (\texttt{[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+})
+        of the expression matches a simplified form of email addresses defined
+        as a non-empty sequence of non-space characters
+        (\texttt{[\textasciicircum\textvisiblespace]+}) followed by \texttt{@},
+        followed by another non-empty sequence of non-space characters. This
+        pattern can be surrounded by any prefix or suffix.
 
-        Figure~\ref{fig:automata_simple} is the graphical representation of a 4
-        states automaton that recognises the same language as the above
-        expression.
+        Figure~\ref{fig:automata_simple} is the graphical representation of a
+        non-deterministic 4-state automaton that recognises the same language
+        as the above expression.
 
-        For example, the word \texttt{send\_hello@world} is part of the
-        language and an accepting run of the automaton of
+        For example, the word \texttt{send{\textvisiblespace}hello@world} is
+        part of the language and an accepting run of the automaton of
         figure~\ref{fig:automata_simple} is $q_0 \underbrace{q_0 q_0 q_0
         q_0}_\texttt{send} q_0 \underbrace{q_1q_1q_1q_1}_\texttt{hello} q_2
         \underbrace{q_2 q_2 q_2 q_2 q_3}_\texttt{world}$.
@@ -265,43 +289,64 @@
             \node[state,accepting] (6) [right=of 4] {$q_3$};
 
             \path[->]
-              (1) edge node {$\Sigma \setminus \texttt \_$} (3)
+              (1) edge node {$\Sigma \setminus \texttt \textvisiblespace$} (3)
                   edge [loop above] node {$\Sigma$} ()
               (3) edge node {$@$} (4)
-                  edge [loop above] node {$\Sigma \setminus \texttt \_$} ()
-              (4) edge node {$\Sigma \setminus \texttt \_$} (6)
-                  edge [loop above] node {$\Sigma \setminus \texttt \_$} ()
+                  edge [loop above] node {$\Sigma \setminus \texttt
+                  \textvisiblespace$} ()
+              (4) edge node {$\Sigma \setminus \texttt \textvisiblespace$} (6)
+                  edge [loop above] node {$\Sigma \setminus \texttt
+                  \textvisiblespace$} ()
               (6) edge [loop above] node {$\Sigma$} ();
           \end{tikzpicture}
           \caption{%
-            An automata recognising the same regular language as
-            \texttt{.*[\textasciicircum\_]+@[\textasciicircum\_]+.*}
+            An automaton recognising the same regular language as
+            \texttt{.*[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+.*}
           }%
           \label{fig:automata_simple}
         \end{figure}
 
     \subsection{Document spanners and regex formulas}
 
-      \subsubsection{Document spanner}
+      \subsubsection{Document spanners}
+
+        In the context of \textit{document} spanners, a word over $\Sigma^*$
+        will be called a \textit{document}.
 
         \begin{definition}
-          Given $\Sigma$ a finite alphabet and a \textit{document}$ d \in
-          \Sigma^*$, a \textit{span} of $d$ is a pair $\Span{i, j}$ with $0
-          \leq i \leq j \leq |d|$ which represents a substring of $d$ starting
-          at position $i$ and ending at position $j - 1$.
+          Given $\Sigma$ a finite alphabet and a document $d \in \Sigma^*$, a
+          \textit{span} of $d$ is a pair $\Span{i, j}$ with $0 \leq i \leq j
+          \leq |d|$ which represents a substring of $d$ starting at position
+          $i$ and ending at position $j - 1$.
         \end{definition}
 
-        Given a finite set $\mathcal{V}$ of variables, a \textit{result} is
-        defined as a mapping from these variables to spans of the input
-        document.  Note that some variable may remain unassigned: formally, a
-        mapping of $\mathcal{V}$ on $d$ is a function $\mu$ from some domain
-        $\mathcal{V}_0 \subset \mathcal{V}$ to spans of $d$.
+        Given a finite set $\mathcal{V}$ of variables, a \textit{result} on a
+        document $d$ is defined as a partial mapping from these variables to
+        spans of $d$. Note that some variables may remain unassigned.
 
         We define a \textit{document spanner} to be a function assigning to
-        every input document d a set of mappings, which denotes the set of
+        every input document $d$ a set of mappings, which denotes the set of
         results of the extraction task on the document d.
 
-      \subsubsection{Ref-word}
+        \begin{definition}
+          A \textit{document spanner} over a finite set $\mathcal{V}$ of
+          variables is a function defined on documents, which maps every
+          document $d$ to sets of results over $\mathcal{V}$ on $d$.
+        \end{definition}
+
+        Intuitively, a document spanner describes some extraction task (e.g.,
+        finding all the email addresses in a document), defined in terms of
+        variables (e.g., find all possible ways of mapping the variable $x$ of
+        $\mathcal{V}$ to a span of the document that contains an email
+        address).  The spanner then describes, on any document $d$, what are
+        the results of the extraction task, e.g., what is the set of results
+        that map the variable $x$ to an email address.
+
+        % TODO: example
+
+      \subsubsection{Ref-words}
+
+        % TODO: examples
 
         \begin{definition}
           Given a variable $x$, we define two distinct \textit{variable
@@ -312,58 +357,74 @@
           \{{\dashv}x, x \in \mathcal{V}\}$.
         \end{definition}
 
-        Theses markers will be handful to encode the beginning of a span (by
+        Theses markers will be helpful to encode the beginning of a span (by
         using $x{\dashv}$) and the end of a span (by using ${\vdash}x$) in
         several contexts.
 
-        \begin{definition}[\cite{peterfreund} Sec. 2.1.1]
+        We extend the definition of \emph{ref-word} for~\cite{peterfreund} to
+        lift the requirement that all variables are mapped.
+
+        \begin{definition}[adapted from \cite{peterfreund} Sec.\ 2.2.1]
           Given a finite alphabet $\Sigma$ and a finite set of variables
           $\mathcal{V}$, a \textit{ref-word} is a word over the extended
           alphabet $\Sigma \uplus \Gamma_\mathcal{V}$.
 
           A ref-word $r \in {(\Sigma \uplus \Gamma_\mathcal{V})}^*$ is
-          \textit{valid} if every variable of $\mathcal{V}$ is opened and then
-          closed exactly once (each variable marker of $\Gamma_\mathcal{V}$
-          appears exactly once in $r$).
+          \textit{valid} if every variable that appear in $r$ is opened and
+          then closed exactly once: $\forall x \in \Gamma_\mathcal{V},
+          (x{\vdash} \in r \land {\dashv}x \in r) \lor (x{\vdash} \notin r
+          \land {\dashv}x \notin r)$.
         \end{definition}
 
         All the ref-words we will consider in this report will be valid.
 
-        For any ref-word $r$ over $\Sigma$ and some set of variables
-        $\mathcal{V}$, we write $r \cap \Sigma$ to denote the subsequence of r
-        where we only keep the letters that are in $\Sigma$, formally: $r \cap
-        \Sigma = r_{\sigma_1} r_{\sigma_2}, \ldots, r_{\sigma_m}$ for the only
-        strictly increasing $\sigma$ such that $m$ is maximal and for all $i
-        \in \llbracket 1, m \rrbracket$, $r_{\sigma_i} \in \Sigma$.
+        \begin{definition}
+          For any ref-word $r$ over $\Sigma$, we write $\restr{r}{\Sigma}$ to
+          denote the subsequence of $r$ where we only keep the letters that are
+          in $\Sigma$, formally: $\restr{r}{\Sigma} = r_{\sigma_1}
+          r_{\sigma_2}, \ldots, r_{\sigma_m}$ for the only strictly increasing
+          $\sigma$ such that $m$ is maximal and for all $i \in \llbracket 1, m
+          \rrbracket$, $r_{\sigma_i} \in \Sigma$.
+        \end{definition}
 
         \begin{definition}
-          For any valid ref-word $r$ we note $\mu^r$ the mapping from
-          $\mathcal{V}$ to spans of the document $d = r \cap \Sigma$ defined as
-          follows. For any $x \in \mathcal{V}, \mu^r (x) = \Span{i, j}$ such
-          that there is exactly $i$ letters of $\Sigma$ before $x{\vdash}$ and
-          $j$ letters of $\Sigma$ after ${\dashv}x$ in $r$.
+          For any valid ref-word $r$ we denote by $\mu^r$ the mapping from
+          $\mathcal{V}$ to spans of the document $d = \restr{r}{\Sigma}$
+          defined as follows. For any $x \in \mathcal{V}, \mu^r (x) = \Span{i,
+          j}$ such that there is exactly $i$ letters of $\Sigma$ before
+          $x{\vdash}$ and $j$ letters of $\Sigma$ before ${\dashv}x$ in $r$.
         \end{definition}
 
       \subsubsection{Sequential variable set automata}
 
-        Document spanners will here be represented using \textit{variable-set
-        automata} (VAs). Transitions of a VA hold labels in $\Sigma \uplus
-        \Gamma_\mathcal{V}$, intuitively this allows to assign a span $\Span{i,
-        j}$ to a variable $x$ if $x{\vdash}$ appears before $d_i$ and
-        ${\dashv}x$ appears before $d_j$ in a run over a document $d$.
+        % TODO: example, peut-etre bouger celui d'en dessous ?
+
+        Document spanners will concretely be represented with automaton running
+        over \textit{ref-words}, formalized with the notion of
+        \textit{variable-set automaton} (VA). The transitions of a VA hold
+        labels in $\Sigma \uplus \Gamma_\mathcal{V}$, intuitively this allows
+        to assign a span $\Span{i, j}$ to a variable $x$ if $x{\vdash}$ appears
+        before $d_i$ and ${\dashv}x$ appears before $d_j$ in a run over a
+        document $d$.
 
         \begin{definition}
           Given a finite alphabet $\Sigma$ and a finite set of variables
-          $\mathcal{V}$ a VA is defined as a tuple $A = (Q, I, \Delta, F)$
-          where $\Delta \subseteq Q \times (\Sigma \uplus \Gamma_\mathcal{V})
-          \times Q$.
+          $\mathcal{V}$, a VA is defined as a tuple $A = (Q, q_\text{init},
+          \Delta, F)$ where $\Delta \subseteq Q \times (\Sigma \uplus
+          \Gamma_\mathcal{V}) \times Q$.
 
-          A \textit{run} $\rho$ of the variable automaton $A$ over a word $d
-          \in \Sigma^*$ is a run of $A$ interpreted as a finite automaton over
-          a ref-word $r \in {(\Sigma \uplus \Gamma_\mathcal{V})}^*$ such that
-          $r \cap \Sigma = d$. $\rho$ is \textit{accepting} $d$ if it is
-          accepting $r$ for $A$ interpreted as a finite automaton. It is
-          \textit{valid} if it is accepting and if the ref-word $r$ is valid.
+          % TODO: Là encore, "accepting d", "accepting r" n'est pas
+          % compréhensible, il faut dire "The run \rho is an accepting run (on
+          % $d$) if the run \rho' of A on $r$ is accepting), avec \rho' le truc
+          % défini d'après Def 1 (il faut lui donner un nom)
+
+          A \textit{run} $\rho$ of the variable automaton $A$ over a document
+          $d \in \Sigma^*$ is a run of $A$ interpreted as a finite automaton
+          over a ref-word $r \in {(\Sigma \uplus \Gamma_\mathcal{V})}^*$ such
+          that $\restr{r}{\Sigma} = d$. The run $\rho$ is \textit{accepting}
+          $d$ if it is accepting $r$ for $A$ interpreted as a finite automaton.
+          It is \textit{valid} if it is accepting and if the ref-word $r$ is
+          valid.
         \end{definition}
 
         % A run $\sigma$ of $A$ over $d$ is defined as a sequence of
@@ -386,21 +447,25 @@
         % read at a position $i$ then the corresponding close marker ${\dashv}x$
         % is read at a position $i'$ with $i \leq i'$.
 
-        We will only consider automata that cannot be accepting but not valid.
-        Such an automaton is called \textit{sequential}. Note that it is
-        NP-complete to decide if a VA has a valid run over a
-        document~\cite{freydenberger:LIPIcs:2017}. Also note that the problem
-        of deciding if an automaton is sequential is in NL and that an
-        automaton can be transformed into a sequential automaton with an
-        exponential blowup~\cite{ICDT19}.
+        All the VAs that we will consider in this report are
+        \textit{sequential}, which means that every accepting run of the VA
+        must be valid. We restrict to sequential VAs because many natural
+        problems on VAs are intractable if we do not make this restriction, for
+        instance it is NP-complete to decide if a VA has a valid run over a
+        document~\cite{freydenberger:LIPIcs:2017}. The restriction to
+        sequential VAs does not limit our expressiveness, as any VA can be
+        translated into a sequential VA, but the complexity of this can be
+        exponential\cite{maturana2018document}. If we want to verify that our
+        input VA is indeed sequential, we can perform this test in
+        NL\cite{maturana2018document}.
 
-        From each valid run $\rho$ labeled by a ref-word $r \in {(\Sigma \uplus
-        \Gamma_\mathcal{V})}^*$, a mapping from $\mathcal{V}$ to spans of $d =
-        r \cap \Sigma$ is defined by $\mu^r$. The document spanner of the
-        variable automaton $A$ is then the function that assigns to every
-        document $d$ the set of mappings defined by the valid runs of $A$ on
-        $d$. Note that the same mapping can be defined by several different
-        runs.
+        Having defined VAs, we can use them to represent document spanners.
+        Intuitively, the spanner defined by a VA maps every document $d$ to the
+        set describing the ways to assign variables to $d$ so that the VA
+        accepts the corresponding ref-words. Formally, for a VA $\mathcal{A}$,
+        the document spanner of $\mathcal{A}$ maps every document $d$ to the
+        set of mappings of the form $\mu^r$ where $r$ is a valid ref-word such
+        that $r \cap \Sigma = d$ and $\mathcal{A}$ has an accepting run on~$d$.
 
         % \todo{This should be more visible, and not here...}
         % The task of the enumeration algorithm defined in~\cite{ICDT19} is the
@@ -414,13 +479,13 @@
         We define \emph{regex formulas} as regular expressions as in
         Section~\ref{sec:def:regex} where we additionally allow \emph{variable
         captures}, i.e.\ assigning spans of the documents matched by parts of
-        the expressions to variables.
+        the expression to variables.
 
-        \begin{definition}[\cite{peterfreund} Sec. 2.2.2]
+        \begin{definition}[\cite{peterfreund} Sec.\ 2.2.2]
           The set of regex formulas is closed under the same rules as in
-          \ref{sec:def:regex} with the addition of the following: for any regex
-          formula $E$ and variable $x \in \mathcal{V}$, $x\{E\}$ is a regex
-          formula.
+          Section~\ref{sec:def:regex} with the addition of the following: for
+          any regex formula $E$ and variable $x \in \mathcal{V}$, $x\{E\}$ is a
+          regex formula.
 
           A regex formula $E$ defines a language over the extended alphabet
           $\Sigma \uplus \Gamma_\mathcal{V}$ like so:
@@ -432,45 +497,57 @@
                 way as they do for regular expressions
             \end{itemize}
 
-          We say that a regex formula $E$ is \textit{functional} if every
-          ref-word denoted by $E$ is valid.
-
-          Given a word $d \in \Sigma^*$ and a regex formula $E$, we call
-          $\Ref(E, d)$ the set of ref-words $r$ in the language denoted by $E$
-          such that $r \cap \Sigma = d$.
+          We say that a regex formula $E$ is \textit{sequential} if every
+          ref-word denoted by $E$ is valid, this may be false if a variable can
+          appear twice in an expression (for example \texttt{x\{a\}x\{a\}} and
+          \texttt{(x\{a\})*} are not sequential since they both recognise
+          \texttt{$x{\vdash}$a${\dashv}x$$x{\vdash}$a${\dashv}x$}).
         \end{definition}
 
-        We will only consider functional regex formulas. Note that it is
-        possible to check whether a regex formula $E$ is functional in time
-        $O(|E| |\mathcal{V}|)$~\cite{peterfreund}. A functional regex formula
-        $E$ defines a document spanner over words of $\Sigma^*$: $\llbracket E
-        \rrbracket (d) = \{\mu^r, r \in \Ref(E, d)\}$.
+        All regex formulas that we will consider in this report are sequential
+        Note that it is possible to check whether a regex formula $E$ is
+        sequential in time $O(|E| \times |\mathcal{V}|)$~\cite{peterfreund}.
 
-        Note that classical algorithms can be extended to build a sequential
-        variable automaton that defines the same document spanner as a
-        functional regex. Given an input regex formula $E$ over an alphabet
-        $\Sigma$, this can be done by converting $E$ into a regular expression
-        over $\Sigma \uplus \Gamma_\mathcal{V}$, replacing any occurrence of
-        form $x\{E'\}$ with $x{\vdash} E {\dashv}x$. The automaton obtained by
-        Glushkov's algorithms can be interpreted as a variable automaton
-        equivalent to $E$.
+        We can now define a document spanner $\llbracket E \rrbracket$ for any
+        sequential regex formula $E$, intuitively it maps a document $d$ to the
+        set of mappings defined by ref-words recognized by $E$ and built by
+        inserting variable markers in $d$.
+
+        \begin{definition}
+          Given a document $d \in \Sigma^*$ and a regex formula $E$, we call
+          $\Ref(E, d)$ the set of ref-words $r$ in the language denoted by $E$
+          such that $\restr{r}{\Sigma} = d$.
+
+          Finally, $\llbracket E \rrbracket (d) = \{\mu^r, r \in \Ref(E, d)\}$
+        \end{definition}
+
+        % TODO motivvation + ref classical
+
+        Note that classical algorithms can be extended to build a sequential VA
+        that defines the same document spanner as a sequential regex formula.
+        Given an input regex formula $E$ over an alphabet $\Sigma$, this can be
+        done by converting $E$ into a regular expression over $\Sigma \uplus
+        \Gamma_\mathcal{V}$, replacing any occurrence of the form $x\{E'\}$
+        with $x{\vdash} E {\dashv}x$. The automaton obtained by Glushkov
+        algorithms can be interpreted as a VA equivalent to $E$.
 
       \subsubsection{Example}
 
-        Let us modify the example of Section~\ref{sec:example_simple} to extract
-        the position of an email-like pattern into a variable:
-        \texttt{.*x\{[\textasciicircum\_]+@[\textasciicircum\_]+\}.*}.
+        Let us modify the example of Section~\ref{sec:example_simple} to
+        extract the position of an email-like pattern into a variable:
+        \texttt{.*x\{[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+\}.*}.
 
-        Figure~\ref{fig:automata} represents an automaton that induces the same
+        Figure~\ref{fig:automata} represents a VA that induces the same
         document spanner as this regex.
 
-        For example, over the word \texttt{send\_hello@world}, the substring
+        For example, over the document
+        \texttt{send{\textvisiblespace}hello@world}, the substring
         \texttt{hello@world} is assigned to $x$ in a valid run over $r =$
-        \texttt{send\_$x{\vdash}$hello@world${\dashv}x$} since $\mu^r(x) =
-        \Span{5, 16}$. Such a valid run over $r$ is $q_0 \underbrace{q_1 q_1 q_1
-        q_1 q_1}_\texttt{send\_} \underbrace{q_2}_{{\vdash}x} \underbrace{q_3 q_3
-        q_3 q_3 q_4 q_5 q_5 q_5 q_5 q_5}_\texttt{hello@world}
-        \underbrace{q_6}_{{\dashv}x}$.
+        \texttt{send{\textvisiblespace}$x{\vdash}$hello@world${\dashv}x$} since
+        $\mu^r(x) = \Span{5, 16}$. Such a valid run over $r$ is $q_0
+        \underbrace{q_1 q_1 q_1 q_1 q_1}_\texttt{send\textvisiblespace}
+        \underbrace{q_2}_{{\vdash}x} \underbrace{q_3 q_3 q_3 q_3 q_4 q_5 q_5
+        q_5 q_5 q_5}_\texttt{hello@world} \underbrace{q_6}_{{\dashv}x}$.
 
         \begin{figure}[ht]%
           \label{fig:automata}
@@ -490,18 +567,20 @@
                   edge [bend right] node [below] {$\vdash x$} (2)
               (1) edge node {$\vdash x$} (2)
                   edge [loop above] node {$\Sigma$} ()
-              (2) edge node {$\Sigma \setminus \texttt \_$} (3)
+              (2) edge node {$\Sigma \setminus \texttt \textvisiblespace$} (3)
               (3) edge node {$@$} (4)
-                  edge [loop above] node {$\Sigma \setminus \texttt \_$} ()
-              (4) edge node {$\Sigma \setminus \texttt \_$} (5)
+                  edge [loop above] node {$\Sigma \setminus \texttt
+                  \textvisiblespace$} ()
+              (4) edge node {$\Sigma \setminus \texttt \textvisiblespace$} (5)
               (5) edge node {$\dashv x$} (6)
-                  edge [loop above] node {$\Sigma \setminus \texttt \_$} ()
+                  edge [loop above] node {$\Sigma \setminus \texttt
+                  \textvisiblespace$} ()
               (6) edge node {$\Sigma$} (7)
               (7) edge [loop above] node {$\Sigma$} ();
           \end{tikzpicture}
           \caption{%
             An automata recognising the same regular language as
-            \texttt{.*x\{[\textasciicircum\_]+@[\textasciicircum\_]+\}.*}
+            \texttt{.*x\{[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+\}.*}
           }%
           \label{ex:intro-1}
         \end{figure}
@@ -577,9 +656,9 @@
       the sake of brevity of this report.
 
       During this whole section we will consider the variable automaton
-      $\mathcal{A} = (Q, I, \Delta, F)$ over the alphabet $\Sigma$ and the set
-      of variables $\mathcal{V}$, and the document $d \in \Sigma^*$ as the
-      inputs of problem~\ref{pb:strong}.
+      $\mathcal{A} = (Q, q_\text{init}, \Delta, F)$ over the alphabet $\Sigma$
+      and the set of variables $\mathcal{V}$, and the document $d \in \Sigma^*$
+      as the inputs of problem~\ref{pb:strong}.
 
       \subsubsection{Mapping DAG}%
         \label{sec:mapping_dag}
@@ -595,7 +674,7 @@
         $\epsilon$-transitions.  We will extend their labels to indicate the
         position in the document in addition to the variable markers.
 
-        \begin{definition}[\cite{ICDT19} Def. 3.1]
+        \begin{definition}[\cite{ICDT19} Def.\ 3.1]
           A mapping DAG consists of a set $V$ of vertices, an initial vertex
           $v_0 \in V$, a final vertex $v_f \in V$, and a set of edges $E$ where
           each edge $(s, x, t)$ has a source vertex $s \in V$, a target vertex
@@ -640,11 +719,11 @@
 
         We can also note that by construction, the mapping DAG that we build is
         \textit{leveled}. This formally sums up how the nodes of the automaton
-        are added by sequentially reading letter of a word or adding a marker
-        edge without reading a letter. \cite{ICDT19} relies on this reduction
-        to build an efficient enumeration algorithm.
+        are added by sequentially reading letter of a document or adding a
+        marker edge without reading a letter. \cite{ICDT19} relies on this
+        reduction to build an efficient enumeration algorithm.
 
-        \begin{definition}[\cite{ICDT19} Def. 3.8]
+        \begin{definition}[\cite{ICDT19} Def.\ 3.8]
           A mapping DAG $G$ is leveled if its vertices $v = (q, i)$ are pairs
           whose second component $i$ is a nonnegative integer called the
           \textit{level} of the vertex and written $level(v)$, and where the
@@ -673,8 +752,10 @@
         \begin{figure}
           \caption{%
             A mapping DAG that defines the same mappings as $Ref(E, d)$ with $E
-            = \texttt{.*x\{[\textasciicircum\_]+@[\textasciicircum\_]+\}.*}$
-            and $d = \texttt{a\_a@b\_ab\_a.b@c}$
+            =
+            \texttt{.*x\{[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+\}.*}$
+            and $d =
+            \texttt{a{\textvisiblespace}a@b{\textvisiblespace}ab{\textvisiblespace}a.b@c}$
           }
           \center\includegraphics[width=5in]{figures/example_dag}
         \end{figure}
@@ -690,10 +771,10 @@
         To do so, the enumeration is performed by keeping track of a set
         $\Lambda$ of vertices of $G$, included in a single level, together with
         the set \texttt{mapping} of assignations that have been done in the
-        paths leading to vertices of $\Lamda$. In other words, \texttt{mapping}
-        is the maximal set of pairs $(m, i) \in \Gamma_\mathcal{V} \times
-        \mathbb{N}$ such that $(m, i)$ appears exactly once in every paths from
-        $v_0$ to a vertex of $\Lambda$.
+        paths leading to vertices of $\Lambda$. In other words,
+        \texttt{mapping} is the maximal set of pairs $(m, i) \in
+        \Gamma_\mathcal{V} \times \mathbb{N}$ such that $(m, i)$ appears
+        exactly once in every paths from $v_0$ to a vertex of $\Lambda$.
 
         Algorithm~\ref{alg:main_enum} describes how this process works. The
         \textproc{Jump} function will be described in next section can be
@@ -776,8 +857,7 @@
           For any pair of levels $i < j$, $\Call{Reach}{i,j}$ is a boolean
           matrix of size at most $W \times W$ which describe for any pair of
           vertices $(u, v)$ such that $level(u) = i$ and $level(v) = j$ whether
-          there is a path for $u$ to $v$ whose last edge is labeled with an
-          $\epsilon$.
+          there is a path for $u$ to $v$ ending with an $\epsilon$-edge.
 
           We only need to pre-compute $\Call{Reach}{i, j}$ for pairs $(i, j)$
           such that $j \in \Call{Rlevel}{i}$. This can be done in time $O(D
@@ -801,7 +881,7 @@
               \Else{}
                 \State{$M \gets \Call{Reach}{i, j}$}
                 \State{%
-                  \Return{$\{u \in V ~|~ level(u) = j \land (\exists v \in
+                  \Return{$\{u \in V \mid level(u) = j \land (\exists v \in
                   \Lambda, M_{u, v} = \texttt{true})\}$}
                 }
               \EndIf{}
@@ -820,7 +900,9 @@
       would not be reasonable to explicitly represent the whole DAG as it is
       defined in Section~\ref{sec:mapping_dag}. Indeed, the graph is of size
       $O(|\mathcal{A}| \times |d|)$ and the index of matrices \textproc{reach}
-      is of size $O(|d| \times W^3) \simeq O(|d| \times |V|^3)$.
+      is of size $O(|d| \times W^3) \simeq O(|d| \times |V|^3)$, early
+      implementation showed that this structure did not fit in memory for
+      reasonable inputs.
 
       % \begin{theorem}
       %   Algorithm~\ref{alg:main_enum} can be modified to fit in memory $O(\min(K
@@ -944,7 +1026,7 @@
         \item a parser for the syntax of regex formulas, that convert an input
           regular expression into an abstract syntax tree (AST)
         \item an algorithm to compile this AST into an automaton, here
-          Glushkov's algorithm is used, modified as explained in
+          Glushkov algorithm is used, modified as explained in
           Section~\ref{sec:regex_formula}.
         \item the pre-computation of our enumeration algorithm, that compiles
           the matches of the automaton over a document into a compact structure
@@ -1030,7 +1112,7 @@
         \label{fig:bench}
         \caption{
           Enumeration speed for our implementation (\texttt{dag\_rs}),
-          $R_1$~(\ref{sec:regex_glossary}), input document: 1MB of DNA }
+          $R_1$~(\ref{sec:regex_glossary}), input document: 10MB of DNA }
         \center\includegraphics[width=5in]{figures/bench_enum_only}
       \end{figure}
 
@@ -1038,7 +1120,7 @@
         \label{fig:bench}
         \caption{
           Enumeration speed of the different algorithms, input regex:
-          $R_1$~(\ref{sec:regex_glossary}), input document: 1MB of DNA
+          $R_1$~(\ref{sec:regex_glossary}), input document: 10MB of DNA
         }
         \center\includegraphics[width=5in]{figures/bench}
       \end{figure}
@@ -1082,7 +1164,7 @@
         \begin{algorithmic}[1]
           \State{$\texttt{output} \gets \emptyset$}
           \For{$i = 0$ to $|d|$}
-            \State{$S \gets I$}
+            \State{$S \gets \{q_\text{init}\}$}
             \For{$j = i$ to $|d|$}
               \If{$S \cap F \neq \emptyset$}
                 \State{%
@@ -1099,7 +1181,7 @@
         \end{algorithmic}
         \caption{%
           A naive quadratic algorithm for Problem~\ref{pb:weak} with inputs
-          $\mathcal{A} = (Q, I, \Delta, F)$ and $d \in \Sigma^*$
+          $\mathcal{A} = (Q, q_\text{init}, \Delta, F)$ and $d \in \Sigma^*$
         }
       \end{algorithm}
 
