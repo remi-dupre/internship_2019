@@ -988,24 +988,27 @@
       using Python~3~\cite{implPython}, and a later efficient implementation
       was rewritten using Rust~\cite{implRust}.
 
-      Theses implementations are built by a succession of supersteps:
+      These implementations are built by a succession of supersteps:
       \begin{enumerate}
         \item a parser for the syntax of regex formulas, that convert an input
-          regular expression into an abstract syntax tree (AST)
-        \item an algorithm to compile this AST into an automaton, here
+          regular expression into an abstract syntax tree (AST);
+        \item an algorithm to compile this AST into an automaton; here
           Glushkov's algorithm is used, modified as explained in
-          Section~\ref{sec:regex_formula}.
+          Section~\ref{sec:regex_formula};
         \item the pre-computation of our enumeration algorithm, that compiles
-          the matches of the automaton over a document into a compact structure
-        \item the enumeration over this structure
+          the matches of the automaton over a document into a compact
+          structure;
+        \item the enumeration over this structure.
       \end{enumerate}
 
-      The main unnecessary overhead of the implementation should be that it
-      saves all vertex-related informations in an Hashmap in order to
-      efficiently with the sparsity of the graph, and the fact that we must be
+      The main unnecessary overhead of the implementation as it stands is that it
+      saves all vertex-related informations in an hash table data
+      structure in order to
+      efficiently deal with the sparsity of the graph, and with the fact that we must be
       able to delete vertices efficiently. Some of theses structures may be
-      replaceable with a low level array, which would decrease the constant
-      cost of accessing these Hashtable.
+      replaceable with a low-level array, which would decrease the constant
+      cost of accessing these hash tables \pierre{and the corresponding
+      memory usage.}
 
       The cleaning of useless states is implemented by running a pass after
       building each level. After building level $i$ it would remove useless
@@ -1016,29 +1019,34 @@
 
     \subsection{Limitations of existing tools}
 
-      Excepted for the naive algorithms and the work of Florenzano \&
-      al.~\cite{florenzano2018constant}, it is difficult to fairly compare to
+      Except for the naive algorithms and the work of Florenzano et 
+      al.~\cite{florenzano2018constant} \pierre{These should really be
+      discussed as a separate subsection}, it is difficult to fairly compare to
       already existing tools. First, we will limit our tests to
       Problem~\ref{pb:weak} in order to be able to compare the speed of our
       algorithm with existing tools.
 
-      Some of these tools allow to output a list of overlapping matches,
+      Some of these tools \pierre{Which tools? You really need to discuss
+      existing tools in detail} allow to output a list of overlapping matches,
       however this will at most output one match for each starting position in
-      the output document. Regex actually have a greedy semantic for closures
+      the output document. Regular expressions actually have a greedy semantic for closures
       in the context of these tools, it will as a default match the largest
       possible string for each closure and can be turned to a lazy semantic
       where it only matches the smallest possible string. For example over the
-      text \texttt{abcde} by using gnu grep:
+      text \texttt{abcde} by using GNU grep \pierre{How do
+      you use grep to return multiple matches? Don't you want to refer to
+      another implementation?}:
         \begin{itemize}
           \item the regexp \texttt{...*} will output \texttt{abcde},
-            \texttt{bcde}, \texttt{cde}, \texttt{de}
+            \texttt{bcde}, \texttt{cde}, \texttt{de};
           \item the regexp \texttt{...*?} (where \texttt{*?} is the lazy
             version of \texttt{*}) will output \texttt{ab}, \texttt{bc},
-            \texttt{cd} and \texttt{de}
+            \texttt{cd} and \texttt{de}.
         \end{itemize}
       However, the output to the enumeration problem should contain all
       substrings of size at least 2, thus these two kinds of greedy semantics
-      don't need to be treated separately.
+      don't need to be treated separately. \pierre{This is not the main
+      message I get: I get more that these semantics are not appropriate}
 
       We will still compare our results with these tools but we need to
       keep in mind that their output will be a subset of the output of our
@@ -1046,12 +1054,15 @@
 
     \subsection{Results}
 
-      We compared tools for several tools: our tool for its Rust implementation
+      We compared tools for several tools \pierre{Hum?}: our Rust implementation
       (\texttt{dag\_rs}) and Python implementation (\texttt{dag\_py}), the
-      implementation of the algorithm of Florenzano \& al.
-      \cite{florenzano2018constant} (\texttt{SpannerConst}), naive algorithms
-      running in time $O(\mathcal{A} \times |d|^2)$ and $O(|d|^3)$ and finally,
-      \texttt{grep} and \texttt{ripgrep} will serve as our reference of
+      implementation of the algorithm of Florenzano et al.
+      \cite{florenzano2018constant} (\texttt{SpannerConst}) \pierre{Say
+      where you found it}, naive algorithms
+      running in time $O(\mathcal{A} \times |d|^2)$ and $O(|d|^3)$
+      \pierre{Again, they need to be described} and finally,
+      \texttt{grep} and \texttt{ripgrep} \pierre{Again, they need to be
+      described} will serve as our reference of
       pre-existing tools.
 
       The results of Figure~\ref{fig:bench} are quite representative of all the
@@ -1072,24 +1083,31 @@
       algorithm relies on determinized automata on examples where an input
       regex is very hard to determinize, the exponential cost of determinizing
       this regex exceeds by far the time spent
-      processing~(Fig.~\ref{fig:hard_determinisation}).
+      processing~(Figure~\ref{fig:hard_determinisation}).
 
 
       \begin{figure}%
-        \label{fig:bench}
         \caption{
           Enumeration speed for our implementation (\texttt{dag\_rs}),
           $R_1$~(\ref{sec:regex_glossary}), input document: 1MB of DNA }
+        \label{fig:bench}
         \center\includegraphics[width=5in]{figures/bench_enum_only}
+
+        \pierre{In the axis legend, ``outputed yet'' should be
+        ``output''}
       \end{figure}
 
       \begin{figure}%
-        \label{fig:bench}
         \caption{
           Enumeration speed of the different algorithms, input regex:
           $R_1$~(\ref{sec:regex_glossary}), input document: 1MB of DNA
         }
+        \label{fig:bench} \pierre{Same label as previous figure???}
         \center\includegraphics[width=5in]{figures/bench}
+        \pierre{In the axis legend, ``outputed yet'' should be
+        ``output''}
+        \pierre{Move the key somewhere it does not overlap with the
+        graphs...}
       \end{figure}
 
       % \begin{figure}%
@@ -1107,7 +1125,7 @@
     Even though the chosen approach of not determinizing the input automaton
     allows to avoid an exponential factor in the size of this automaton, it
     doesn't seem to pay off compared to a determinized approach such as the
-    algorithm described by Florenzano \& al.~\cite{florenzano2018constant}.
+    algorithm described by Florenzano et al.~\cite{florenzano2018constant}.
 
   \pagebreak
   \bibliography{bibliography}
