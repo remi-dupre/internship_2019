@@ -1,4 +1,4 @@
-\documentclass[12px]{article}
+\documentclass[11px]{article}
 
 \usepackage{algorithm}
 \usepackage{microtype}
@@ -53,10 +53,13 @@
 
 \begin{document}
   \maketitle
-
+  \vspace{2cm}
   \input{summary.tex}
+
   \pagebreak
+
   \tableofcontents
+
   \pagebreak
 
   \section{Introduction}
@@ -76,32 +79,29 @@
     \texttt{\textcolor{red}{UAA}}$. It has 3 matches over the document $d =
     \texttt{AUGAUGCGCUAAUAA}$:
       \begin{itemize}
-        \item $d_0 \ldots d_8 =
+        \item $d_0 \ldots d_{11} =
           \texttt{\textcolor{blue}{AUG}\textcolor{gray}{AUGCGC}\textcolor{red}{UAA}}$
-        \item $d_3 \ldots d_8 =
-          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{CGC}\textcolor{red}{UAA}}$
         \item $d_3 \ldots d_{11} =
+          \texttt{\textcolor{blue}{AUG}\textcolor{gray}{CGC}\textcolor{red}{UAA}}$
+        \item $d_3 \ldots d_{14} =
           \texttt{\textcolor{blue}{AUG}\textcolor{gray}{CGCUAA}\textcolor{red}{UAA}}$
       \end{itemize}
-      \pierre{The indexes (8,11) are wrong.}
 
     By allowing overlapping matches, it also means that the output can could be
-    of a quadratic size in the size of the input document.
-    \pierre{Explain why} Thus, a classical
-    worst case complexity analysis cannot hope \pierre{Bad grammar, an
-    analysis does not ``hope'' anything, rephrase} to be faster than $O(|d|^2)$.
-    This worst-case behaviour is fairly easy to reach using the regex
-    \texttt{.*} over any document $d$.
+    of a quadratic size in the size of the input document. This worst-case
+    behaviour is fairly easy to reach using the regex \texttt{.*} (matching all
+    the words) over any document $d$, since all the factors of $d$ will be in
+    the language denoted by this regular expression. Thus, considering a
+    classical complexity analysis, matches can't be enumerated with a worst
+    case complexity faster than $O(|d|^2)$.
 
     Since the input of a pattern matching problem is typically big, this
     quadratic factor is usually too expensive. Moreover, in many real-world
     cases, the output will actually be very small compared to the input.
 
-    Thus it will be \pierre{Avoid using future tense, no reason to use it
-    here.} more relevant to use a different complexity measure for
-    this problem, which is expressive \pierre{Not sure what you mean by
-    ``expressive''} about the size of the output. Here, we
-    will use the complexity of enumeration, which integrates two measures:
+    Thus will use a complexity measure which is more interesting in this
+    context this problem. Here, we will use the complexity of enumeration,
+    which integrates two bounds:
     \begin{itemize}
       \item an upper bound on the time spent in the \textit{preprocessing}
         phase of the algorithm, this is the time spent computing before the
@@ -116,19 +116,20 @@
     independent of this size. My work was to adapt this algorithm for
     implementation and compare it to other existing tools.
 
-    \pierre{You really need to discuss motivations here: genomics,
-    security auditing through log report analysis, information
-    extraction, etc.}
-
-    \pierre{Announce here the outline of your report, explaining briefly
-    what it contains and how it reflects what you did in your
-    internship.}
+    % \pierre{You really need to discuss motivations here: genomics,
+    % security auditing through log report analysis, information
+    % extraction, etc.}
+    %
+    % \pierre{Announce here the outline of your report, explaining briefly
+    % what it contains and how it reflects what you did in your
+    % internship.}
 
 
   \section{Definitions}
 
-  \pierre{Don't just start new subsections, give a high-level view of the
-  section}
+    We will first recall basic definitions about regular expressions and
+    automata theory, and then introduce documents spanners and variants of
+    regular expression and automata that will be used to address the problem.
 
     \subsection{Regular expressions and regular languages}
 
@@ -224,10 +225,10 @@
           $\{\texttt{hello}, \texttt{world}, \texttt{world!}, \texttt{world!!},
           \ldots\}$.
 
-          \pierre{You are mixing up regular expressions written in
-          italics as mathematical formulas, and written in typewriter
-          fonts as code; it would be better to use only one
-          convention.}
+          % TODO: \pierre{You are mixing up regular expressions written in
+          % italics as mathematical formulas, and written in typewriter
+          % fonts as code; it would be better to use only one
+          % convention.}
 
       \subsubsection{Classical algorithms}
 
@@ -266,12 +267,12 @@
         in the size of the expression but the resulting automata contains
         $\epsilon$-transitions that can be removed in time $O(n^2)$.
 
-        Glushkov algorithm on the other hand can also compute the same
+        Glushkov's algorithm on the other hand can also compute the same
         automaton with no $\epsilon$-transitions, by recursively computing the
         set of the first letters, last letters and factor of length two of the
         words in the regular language~\cite{glushkov1961abstract}. This process
         takes time $O(n^2)$. As this more mathematical construction is more
-        convenient to work with, we will use Glushkov algorithm to compile
+        convenient to work with, we will use Glushkov's algorithm to compile
         regular expressions into automatons here.
 
       \subsubsection{Example}%
@@ -332,11 +333,11 @@
         In the context of \textit{document} spanners, a word over $\Sigma^*$
         will be called a \textit{document}.
 
-        \pierre{You need some text here, in particular commenting on the
-        literature on spanners.}
+        % \pierre{You need some text here, in particular commenting on the
+        % literature on spanners.}
 
-      \pierre{This subsection is not really about document spanners, you
-      don't define them yet.}
+        % \pierre{This subsection is not really about document spanners, you
+        % don't define them yet.}
 
         \begin{definition}
           Given a finite alphabet $\Sigma$ and a document $d \in \Sigma^*$, a
@@ -554,17 +555,17 @@
         Given an input regex formula $E$ over an alphabet $\Sigma$, this can be
         done by converting $E$ into a regular expression over $\Sigma \uplus
         \Gamma_\mathcal{V}$, replacing any occurrence of the form $x\{E'\}$
-        with $x{\vdash} E {\dashv}x$. The automaton obtained by Glushkov
+        with $x{\vdash} E {\dashv}x$. The automaton obtained by Glushkov's
         algorithm can be interpreted as a VA equivalent to $E$.
 
       \subsubsection{Example}
 
         Let us modify the example of Section~\ref{sec:example_simple} to
         extract the position of an email-like pattern into a variable:
-        \texttt{.*x\{[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+\}.*}.
+        \texttt{.*x\{[\textasciicircum\textvisiblespace]+@[\textasciicircum\textvisiblespace]+\}.*}
 
-        \pierre{You should use a different typeface for $x{\cdot}$ than
-        for literal characters, to avoid confusion.}
+        % \pierre{You should use a different typeface for $x{\cdot}$ than
+        % for literal characters, to avoid confusion.}
 
         Figure~\ref{fig:automata} represents a VA that induces the same
         document spanner as this regex.
@@ -671,12 +672,12 @@
         polynomial preprocessing and delay in the input VA.
       \end{theorem}
 
-    \subsection{Related work}
-
-      \todo[inline]{%
-        Florenzano et al \\
-        Anything else?
-      }
+    % \subsection{Related work}
+    %
+    %   \todo[inline]{%
+    %     Florenzano et al \\
+    %     Anything else?
+    %   }
 
     \subsection{Outlines of the algorithm}
 
@@ -925,9 +926,9 @@
 
     \subsection{Lowering memory complexity}
 
-      The first issue that raised out of early implementations was that it
-      would not be reasonable to explicitly represent the whole DAG as it is
-      defined in Section~\ref{sec:mapping_dag}. Indeed, the graph is of size
+      Early implementations showed that it would not be reasonable to
+      explicitly represent the whole DAG as it is defined in
+      Section~\ref{sec:mapping_dag}. Indeed, the graph is of size
       $O(|\mathcal{A}| \times |d|)$ and the index of matrices \textproc{reach}
       is of size $O(|d| \times W^3) \simeq O(|d| \times |V|^3)$, early
       implementation showed that this structure did not fit in memory for
@@ -947,11 +948,11 @@
       The following parts will introduce two modifications to the algorithm:
       computing \textproc{JL}, \textproc{Rlevel} and \textproc{Reach} in
       streaming in order to remove $\epsilon$-edges from the graph and removing
-      unreachable states while we pre-compute theses structures.
+      unreachable states while we pre-compute these structures.
 
-      In practice these modifications proved to be very efficient has they
-      allowed the algorithm to run with a memory cost constant in $d$ on most
-      cases we studied.
+      In practice these modifications proved to be very efficient as they
+      allowed the algorithm to run with a memory cost linear in the size of the
+      output for most cases we studied.
 
       \subsubsection{Removing $\epsilon$-transitions}
 
@@ -973,7 +974,7 @@
         \end{theorem}
 
         Algorithm~\ref{alg:build_jl} show how to compute \textproc{JL} at the
-        same time as we build $G$ without any $\epsilon$-edge. The algorithm
+        same time that we build $G$ without any $\epsilon$-edge. The algorithm
         can be adapted to compute \textproc{Rlevel} and \textproc{Reach} in a
         similar way.
 
@@ -987,7 +988,7 @@
             \For{$q$ \textbf{in} $F$}
               \State{$v \gets (q, |d|)$}
               \State{$V \gets V \uplus \{v\}$}
-              \If{there is no marker transitions that start from $v$}
+              \If{there are no marker transitions that start from $v$}
                 \State{$\Call{JL}{v} \gets |d|$}
               \EndIf{}
             \EndFor{}
@@ -1016,8 +1017,8 @@
 
       \subsubsection{Cleaning useless states}
 
-        As vertices that or not accessible or not co-accessible can't be part
-        of an accepting path n $G$, they can be removed. This can be done by
+        As vertices that not accessible or not co-accessible can't be part
+        of an accepting path in $G$, they can be removed. This can be done by
         computing two runs over $G$ after it is computed, one starting from the
         initial vertex and one starting from the final vertex. One of the two
         runs can be simulated at the same time as we build $G$, but either the
@@ -1028,75 +1029,72 @@
         can also be removed from the DAG since the \textproc{Jump} function
         can't reach them.
 
-        The second optimisation added to the algorithm is then to remove theses
+        The second optimisation added to the algorithm is then to remove these
         unreachable nodes as soon as possible, which can be done by keeping
         track of the number of edges starting from a vertex, when a vertex $v'$
         is removed this counter is decremented for every vertex $v$ such that
         there is a marker edge from $v$ to $v'$ or $v'$ is adjacent to $v$ in
         the matrix $\Call{Reach}{level(v), level(v')}$.
 
-        Note that sadly this modification can still be has bad as the
-        unmodified algorithm, for example the graph obtained with the regex
+        Note that sadly this modification can still be as bad as the unmodified
+        algorithm, for example the graph obtained with the regex
         \texttt{a*x\{a\{1000\}\}a*} over the document $d = aa \ldots aab$ will
         only contain accessible vertices, except for vertices of the last
-        level.  Thus the compression operation will not be able to perform
-        until the last letter of $d$ is read.
+        level. Thus no vertex of $G$ can be removed until the last letter of
+        $d$ is read.
 
   \section{Performance of the algorithm}
 
     \subsection{Implementation}
 
-      A first draft of the implementation of the algorithm was implemented
-      using Python~3~\cite{implPython}, and a later efficient implementation
-      was rewritten using Rust~\cite{implRust}.
+      A first implementation of the algorithm was built using
+      Python~3~\cite{implPython}, and a later efficient implementation was
+      rewritten using Rust~\cite{implRust}.
 
-      These implementations are built by a succession of supersteps:
+      These implementations are follow a succession of steps:
       \begin{enumerate}
-        \item a parser for the syntax of regex formulas, that convert an input
+        \item a parser for the syntax of regex formulas, converts an input
           regular expression into an abstract syntax tree (AST);
         \item an algorithm to compile this AST into an automaton; here
-          Glushkov algorithm is used, modified as explained in
+          Glushkov's algorithm is used, extended as explained in
           Section~\ref{sec:regex_formula};
         \item the pre-computation of our enumeration algorithm, that compiles
-          the matches of the automaton over a document into a compact
-          structure;
+          the matches of the automaton over a document into a mapping DAG;
         \item the enumeration over this structure.
       \end{enumerate}
 
       The main unnecessary overhead of the implementation as it stands is that
-      it saves all vertex-related informations in an hash table data structure
-      in order to efficiently deal with the sparsity of the graph, and with the
-      fact that we must be able to delete vertices efficiently. Some of theses
-      structures may be replaceable with a low-level array, which would
-      decrease the constant cost of accessing these hash tables and the
-      corresponding memory usage.
+      it saves all vertex-related information in a hash table data structure in
+      order to efficiently deal with the sparsity of the graph, and to allow us
+      to delete vertices efficiently. Some of these structures may be
+      replaceable with a low-level array, which would decrease the constant
+      cost of accessing these hash tables and the corresponding memory usage.
 
       The cleaning of useless states is implemented by running a pass after
-      building each level. After building level $i$ it would remove useless
-      states in the last $2^k$ levels for the highest $k$ such that $2^k$
-      divides $i$. This adds a logarithmic $O(\log |d|)$ factor but allows to
-      update \textproc{Reach} matrices less often, which is in practice rather
-      slow since it requires to perform a memory allocation.
+      building each level. After building level $i$ we apply the cleaning
+      operation would remove useless states in the last $2^k$ levels for the
+      highest $k$ such that $2^k$ divides $i$. This adds a logarithmic $O(\log
+      |d|)$ factor but allows to update \textproc{Reach} matrices less often,
+      which is in practice rather slow since it requires to perform a memory
+      allocation.
 
     \subsection{Limitations of existing tools}
 
       Except for the naive algorithms and the work of Florenzano et
-      al.~\cite{florenzano2018constant} \pierre{These should really be
-      discussed as a separate subsection}, it is difficult to fairly compare to
+      al.~\cite{florenzano2018constant}, it is difficult to fairly compare to
       already existing tools. First, we will limit our tests to
       Problem~\ref{pb:weak} in order to be able to compare the speed of our
       algorithm with existing tools.
 
-      Some of these tools \pierre{Which tools? You really need to discuss
-      existing tools in detail} allow to output a list of overlapping matches,
+      Some of these tools
+      % \pierre{Which tools? You really need to discuss existing tools in detail}
+      allow to output a list of overlapping matches,
       however this will at most output one match for each starting position in
       the output document. Regular expressions actually have a greedy semantic
       for closures in the context of these tools, it will as a default match
       the largest possible string for each closure and can be turned to a lazy
       semantic where it only matches the smallest possible string. For example
-      over the text \texttt{abcde} by using GNU grep \pierre{How do you use
-      grep to return multiple matches? Don't you want to refer to another
-      implementation?}:
+      over the text \texttt{abcde} by using GNU grep:
         \begin{itemize}
           \item the regexp \texttt{...*} will output \texttt{abcde},
             \texttt{bcde}, \texttt{cde}, \texttt{de};
@@ -1104,10 +1102,8 @@
             version of \texttt{*}) will output \texttt{ab}, \texttt{bc},
             \texttt{cd} and \texttt{de}.
         \end{itemize}
-      However, the output to the enumeration problem should contain all
-      substrings of size at least 2, thus these two kinds of greedy semantics
-      don't need to be treated separately. \pierre{This is not the main
-      message I get: I get more that these semantics are not appropriate}
+      However, this semantic is not relevant in the case of our enumeration
+      problem as the output should contain all substrings of size at least 2.
 
       We will still compare our results with these tools but we need to
       keep in mind that their output will be a subset of the output of our
@@ -1118,11 +1114,11 @@
       We compared performances of several tools: our Rust implementation
       (\texttt{dag\_rs}) and Python implementation (\texttt{dag\_py}), the
       implementation of the algorithm of Florenzano et al.
-      \cite{florenzano2018constant} (\texttt{SpannerConst}) \pierre{Say where
-      you found it}, naive algorithms running in time $O(\mathcal{A} \times
-      |d|^2)$ and $O(|d|^3)$ \pierre{Again, they need to be described} and
-      finally, \texttt{grep} and \texttt{ripgrep} \pierre{Again, they need to
-      be described} will serve as our reference of pre-existing tools.
+      (\texttt{SpannerConst}, their implementation can be found on
+      Github~\cite{implSpannersConst}), naive algorithms running in time
+      $O(\mathcal{A} \times |d|^2)$ and $O(|d|^3)$  and finally, \texttt{grep}
+      and \texttt{ripgrep} will serve as our reference of pre-existing tools.
+      % \pierre{Again, again, again, they need to be described}
 
       The results of Figure~\ref{fig:bench} are quite representative of all the
       results we got. The enumeration phase is very quick for our
@@ -1141,32 +1137,32 @@
       cases, usually by a factor greater than 10. However the approach of the
       algorithm relies on determinized automata on examples where an input
       regex is very hard to determinize, the exponential cost of determinizing
-      this regex exceeds by far the time spent
-      processing~(Figure~\ref{fig:hard_determinisation}).
-
+      this regex exceeds by far the time spent processing.
 
       \begin{figure}%
         \caption{
-          Enumeration speed for our implementation (\texttt{dag\_rs}),
-          $R_1$~(\ref{sec:regex_glossary}), input document: 10MB of DNA }
-        \center\includegraphics[width=5in]{figures/bench_enum_only}
-
-        \pierre{In the axis legend, ``outputed yet'' should be
-        ``output''}
-      \end{figure}
-
-      \begin{figure}%
-        \caption{
-          Enumeration speed of the different algorithms, input regex:
-          $R_1$~(\ref{sec:regex_glossary}), input document: 10MB of DNA
+          Enumeration speed of the different algorithms, over 10MB of DNA
         }
-        \label{fig:bench} \pierre{Same label as previous figure???}
+        \label{fig:bench_enum_only}
+        % \pierre{Same label as previous figure???}
         \center\includegraphics[width=5in]{figures/bench}
-        \pierre{In the axis legend, ``outputed yet'' should be
-        ``output''}
-        \pierre{Move the key somewhere it does not overlap with the
-        graphs...}
+        % \pierre{In the axis legend, ``outputed yet'' should be
+        % ``output''}
+        % \pierre{Move the key somewhere it does not overlap with the
+        % graphs...}
       \end{figure}
+
+      \begin{figure}%
+        \label{fig:bench}
+        \caption{
+          Enumeration speed for our implementation (\texttt{dag\_rs}), over
+          10MB of DNA
+        }
+        \center\includegraphics[width=5in]{figures/bench_enum_only}
+        % \pierre{In the axis legend, ``outputed yet'' should be
+        % ``output''}
+      \end{figure}
+
 
       % \begin{figure}%
       %   \label{fig:bench}
@@ -1177,13 +1173,32 @@
 
   \section{Conclusion}
 
-    The work of this internship enriched the algorithm described
-    in~\cite{ICDT19} to make it usable in practice.
-
     Even though the chosen approach of not determinizing the input automaton
     allows to avoid an exponential factor in the size of this automaton, it
     doesn't seem to pay off compared to a determinized approach such as the
-    algorithm described by Florenzano et al.~\cite{florenzano2018constant}.
+    algorithm described in~\cite{florenzano2018constant}.
+
+    It could be interesting for later work to adapt the algorithm to start the
+    enumeration phase during the preprocessing as it would benefit from the fact
+    that we do not require to determinize the automaton. This would be
+    interesting for some cases to construct an algorithm that outputs the first
+    $k$ matches in a time linear in $k$, no matter of how $k$ compares to the
+    size of the document, this could for example apply to a search engine on
+    which a user could get a preview of the results of his research without
+    paying the full cost of the pre-computation.
+
+    Later work could also focus on how to adapt this algorithm to allow
+    logarithmic-time updates. Work have already been done to allow this operation
+    for extraction over trees instead of textual documents (Amarilli et
+    al.~\cite{amarilli2019enumeration}, 2019).
+
+    % The work of this internship enriched the algorithm described
+    % in~\cite{ICDT19} to make it usable in practice.
+    %
+    % Even though the chosen approach of not determinizing the input automaton
+    % allows to avoid an exponential factor in the size of this automaton, it
+    % doesn't seem to pay off compared to a determinized approach such as the
+    % algorithm described by Florenzano et al.~\cite{florenzano2018constant}.
 
   \pagebreak
   \bibliography{bibliography}
@@ -1193,7 +1208,7 @@
   \pagebreak
   \section*{Appendices}
 
-    \todo[inline]{Maybe Glushkov here?}
+    % \todo[inline]{Maybe Glushkov here?}
 
     \subsection{Naive algorithm for the weak problem}
 
@@ -1228,7 +1243,7 @@
         }
       \end{algorithm}
 
-    \subsection{Regex glossary}%
-      \label{sec:regex_glossary}
+    % \subsection{Regex glossary}%
+    %   \label{sec:regex_glossary}
 
 \end{document}

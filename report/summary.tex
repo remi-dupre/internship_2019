@@ -5,25 +5,31 @@
   % What is the state of the art in this area ?
 
   % NOTE: citations concernant les méthodes classiques ?
-  The problem of membership for regular languages is a well-understood problem,
-  automata-based techniques. \pierre{The previous sentence is
-  nonsensical}  
-  % NOTE: illisible
+  The problem of membership for regular languages has been studied for long,
+  work from Glushkov~\cite{glushkov1961abstract} in 1961 or
+  Thompson~\cite{thompson1968programming} in 1968 already introduced efficient
+  automata based technique to build efficient algorithms to solve it.
   However, few efforts have been made to enumerate all matches of a regexp over
-  a text. Indeed most tools used to match regexps only produce one match, some
-  like grep are intended to find any line containing a match, it sometimes
-  append \pierre{happen} that an option is available to list all
-  non-overlapping matches. \pierre{Previous sentence likes coordination
-  (conjunctions, etc.)}
-  % "the tools intended to list all matches only list non-overlapping..."
+  a text. Indeed most tools intended to match regexps are only able to list
+  non-overlapping matches.
 
-  Enumeration techniques are widely used in database theory, \pierre{Not
-  sure it is useful to mention database theory here} in order to deal
-  with large datasets, it seems relevant to try applying these techniques for
-  the problem of enumerating matches over a text, which could result on a
-  quadratic output for large input documents. \pierre{The sentence is too
-  long and it is not clear what the message is}
-  % dire y a bcp then dire c'est pour ca algo enumeration
+  Some efforts have been made in recent years to address the issue of
+  outputting all (possibly overlapping) matches for \textit{variable automata}
+  (\cite{florenzano2018constant} in 2018, \cite{ICDT19} in 2019). As the output
+  to this problem can be considerably large compared to its input, these
+  technique rely on the structure of an enumeration algorithm, where we can
+  first run a preprocessing phase and must then produce the results with a
+  small delay between any two consecutive results.
+
+  % to apply enumeration techniques
+  % to a more general kind of automato
+  % Enumeration techniques are widely used in database theory, \pierre{Not
+  % sure it is useful to mention database theory here} in order to deal
+  % with large datasets, it seems relevant to try applying these techniques for
+  % the problem of enumerating matches over a text, which could result on a
+  % quadratic output for large input documents. \pierre{The sentence is too
+  % long and it is not clear what the message is}
+  % % dire y a bcp then dire c'est pour ca algo enumeration
 
 \subsection*{The research problem}
 
@@ -33,26 +39,34 @@
   % If so, why are you the first researcher in the universe who consider it ?
   % If not, why did you think that you could bring an original contribution ?
 
-  My internship focuses on an algorithm proposed by Antoine Amarilli, Pierre
-  Bourhis, Stefan Mengel and Matthias Niewerth~\cite{ICDT19}, it allows to
-  enumerate all matches of a regexp with a constant delay, and a preprocessing
-  linear in the size of the automata \pierre{automaton, not automata; but
-  is it in the size of the automaton, or in that of the document?}
-  \pierre{Break the sentence in two or use conjunctions to structure the
-  sentence}
-  (complexity factors dependent of the
-  size of the regular expression being considered as constants).
-  \pierre{This is not understandable: how does the size of the regular
-  expression and the size of the automaton differs?}
-  % need a def of constant
+  We will work with a variants of regular expression which allow to incorporate
+  variables in it (called \emph{regex formulas}) which can be compile to
+  variant of finite automata (called \emph{variable automata} or VA). These
+  automata can be evaluated on a document to extract parts of the document
+  matching a sub-expression of the input regex formula. This new expressiveness
+  allows to extract relevant information from text formatted data, which is
+  quite in use today (e.g. CSV, JSON, XML).
 
-  No implementation was provided for this algorithm yet, and it seemed that
-  some new issues would appear while trying to implement the algorithm, for
-  example the memory cost of a naive implementation of the algorithm would
-  quickly exceed the typical memory available on a personal computer.
-  % semms like no pb, "in particular investigating new questions [...]"
+  Amarilli et al.\cite{ICDT19} introduced an algorithm to efficiently computing
+  without duplicates all tuples substrings of the input document that satisfy
+  the conditions described by a VA\@. As this approach is compatible with a
+  non-deterministic VA, it can avoid the exponential cost of determinizing the
+  VA that we usually obtained from the compilation of a regex formula. This
+  work directly addresses previous work on this problem that required the VA to
+  be determinize, allowing to spare the extra cost of determinization. However
+  the methods described in this paper did not lead to practical implementation
+  of this algorithm. Early work from my internship showed that this algorithm
+  wasn't suitable for a practical usage, particularly because of its memory
+  complexity.
 
 \subsection*{Your contribution}
+
+  My work introduced enhancement to the algorithms described in~\cite{ICDT19}
+  in order to address the issue of the memory complexity. The modification I
+  introduced didn't introduce any time complexity to the existing algorithm,
+  sadly even though they proved to be very efficient in the practical cases,
+  the worst case memory complexity is the same as it was before even when the
+  number of matches is small compared to the size of the document.
 
   % What is your solution to the question described in the last paragraph ?
   % Be careful, do \emph{not} give technical details, only rough ideas !
@@ -61,6 +75,19 @@
 
 \subsection*{Arguments supporting its validity}
 
+  The modifications to the algorithm introduced during this internship allowed
+  to build a practical implementation that runs in a fair amount of time over
+  practical cases. This is an interesting result since early work of my
+  internship showed that this algorithm did not fit in memory for very basic
+  inputs.
+
+  However, the experiments showed this implementation is generally slow
+  compared to other existing tools, and in particular the work of Florenzano et
+  al.~\cite{florenzano2018constant} which addresses the same task as we do.
+  Some work has been done trying to identify which parts of the algorithm were
+  the most expensive in practice, however it didn't lead to convincing ideas
+  for improvements.
+
   % What is the evidence that your solution is a good solution ?  Experiments ?
   % Proofs ?
   % Comment the robustness of your solution: how does it rely/depend on the
@@ -68,7 +95,21 @@
 
 \subsection*{Summary and future work}
 
-  % What is next ? In which respect is your approach general ?
-  % What did your contribution bring to the area ?
-  % What should be done now ?
-  % What is the good \emph{next} question ?
+  Even though the chosen approach of not determinizing the input automaton
+  allows to avoid an exponential factor in the size of this automaton, it
+  doesn't seem to pay off compared to a determinized approach such as the
+  algorithm described in~\cite{florenzano2018constant}.
+
+  It could be interesting for later work to adapt the algorithm to start the
+  enumeration phase during the preprocessing as it would benefit from the fact
+  that we do not require to determinize the automaton. This would be
+  interesting for some cases to construct an algorithm that outputs the first
+  $k$ matches in a time linear in $k$, no matter of how $k$ compares to the
+  size of the document, this could for example apply to a search engine on
+  which a user could get a preview of the results of his research without
+  paying the full cost of the pre-computation.
+
+  Later work could also focus on how to adapt this algorithm to allow
+  logarithmic-time updates. Work have already been done to allow this operation
+  for extraction over trees instead of textual documents (Amarilli et
+  al.~\cite{amarilli2019enumeration}, 2019).
